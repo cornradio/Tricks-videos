@@ -88,6 +88,11 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
 /* ── Detail ── */
 .detail-topbar{display:flex;gap:8px;align-items:center;margin-bottom:16px}
 .detail-topbar .spacer{flex:1}
+.mkv-seek-warn{display:none;align-items:flex-start;gap:10px;margin:0 0 8px;padding:8px 10px 8px 12px;background:rgba(218,165,32,.12);border:1px solid rgba(218,165,32,.45);border-radius:8px;color:#e6c35c;font-size:12px;line-height:1.45}
+.mkv-seek-warn.show{display:flex}
+.mkv-seek-warn span{flex:1;min-width:0}
+.mkv-seek-warn button{flex-shrink:0;background:none;border:none;color:#c9a84a;cursor:pointer;font-size:16px;line-height:1;padding:0 2px;opacity:.75}
+.mkv-seek-warn button:hover{opacity:1;color:#e6c35c}
 .detail-video{background:#000;border-radius:8px;overflow:hidden;margin-bottom:0;height:50vh;min-height:200px;display:flex;align-items:center;justify-content:center}
 .video-resize-handle{height:8px;background:#000;border:1px solid var(--border);border-top:none;border-radius:0 0 8px 8px;cursor:ns-resize;display:flex;align-items:center;justify-content:center;margin-bottom:16px;user-select:none;touch-action:none}
 .video-resize-handle:hover{background:rgba(255,255,255,.06)}
@@ -165,11 +170,12 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
 .field input:focus{border-color:var(--accent)}
 
 /* ── Context Menu ── */
-.ctx-menu{position:fixed;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:4px 0;z-index:150;min-width:120px;box-shadow:0 8px 24px rgba(0,0,0,.6);display:none}
+.ctx-menu{position:fixed;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:4px 0;z-index:150;min-width:160px;box-shadow:0 8px 24px rgba(0,0,0,.6);display:none}
 .ctx-menu.show{display:block}
-.ctx-item{padding:7px 16px;font-size:13px;cursor:pointer;color:var(--text);transition:background 100ms}
+.ctx-item{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:7px 14px 7px 16px;font-size:13px;cursor:pointer;color:var(--text);transition:background 100ms}
 .ctx-item:hover{background:rgba(255,255,255,.06)}
 .ctx-item.danger{color:var(--red)}
+.ctx-item kbd{display:inline-block;min-width:18px;padding:1px 5px;background:var(--bg);border:1px solid var(--border);border-radius:3px;font-size:10px;font-family:monospace;text-align:center;color:var(--text3);font-weight:600;flex-shrink:0}
 
 /* ── Folder Management ── */
 .sidebar-add{background:none;border:1px solid var(--border);color:var(--text2);border-radius:4px;padding:1px 7px;cursor:pointer;font-size:13px;line-height:1;transition:all var(--speed)}
@@ -184,10 +190,14 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
 .detail-drag-icon.dragging{opacity:.4}
 
 .stream-menu{position:relative;display:inline-block}
-.stream-menu .stream-dropdown{display:none;position:absolute;top:100%;right:0;margin-top:4px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:4px 0;min-width:120px;box-shadow:0 8px 24px rgba(0,0,0,.5);z-index:20}
+.stream-menu .stream-dropdown{display:none;position:absolute;top:100%;right:0;margin-top:4px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:4px 0;min-width:180px;box-shadow:0 8px 24px rgba(0,0,0,.5);z-index:20}
 .stream-menu .stream-dropdown.show{display:block}
 .stream-menu .stream-item{display:block;width:100%;padding:8px 16px;background:none;border:none;color:var(--text);font-size:12px;font-family:inherit;text-align:left;cursor:pointer;white-space:nowrap;transition:background .15s}
 .stream-menu .stream-item:hover{background:rgba(255,255,255,.06)}
+.stream-menu .stream-player-row{display:flex;align-items:stretch;gap:0}
+.stream-menu .stream-player-row .stream-item{flex:1;min-width:0}
+.stream-menu .stream-dl{flex-shrink:0;display:flex;align-items:center;padding:0 10px;font-size:11px;color:var(--text3);text-decoration:none;border-left:1px solid var(--border);transition:color .15s,background .15s}
+.stream-menu .stream-dl:hover{color:var(--accent);background:rgba(255,255,255,.06)}
 
 .help-btn{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
 .help-btn:hover{background:var(--hover);color:var(--text);border-color:var(--accent)}
@@ -397,7 +407,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
     <a href="/converter.html"><span class="mode-icon">🔄</span>超级转换器</a>
     <a href="/resources.html"><span class="mode-icon">📦</span>资源获取</a>
   </div>
-  <input type="text" id="searchInput" class="search-input" placeholder="搜索文件名..." autocomplete="off">
+  <input type="text" id="searchInput" class="search-input" placeholder="搜索文件名（空格分隔多关键词）..." autocomplete="off">
   <div class="sort-wrap" id="sortWrap">
     <span class="sort-seg" data-sort="name_asc">A-Z</span>
     <span class="sort-seg" data-sort="name_desc">Z-A</span>
@@ -435,6 +445,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
         <div class="help-shortcut"><kbd>F</kbd><span>全屏播放</span></div>
         <div class="help-shortcut"><kbd>P</kbd><span>切换控件显示</span></div>
         <div class="help-shortcut"><kbd>R</kbd><span>重命名文件</span></div>
+        <div class="help-shortcut"><kbd>Ctrl+R</kbd><span>刷新列表</span></div>
         <div class="help-shortcut"><kbd>Z</kbd><span>收藏/取消收藏</span></div>
         <div class="help-shortcut"><kbd>Del</kbd><span>删除文件</span></div>
         <div class="help-shortcut"><kbd>A</kbd><span>标记起点 (片段面板开启时)</span></div>
@@ -451,6 +462,10 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
           <input type="number" id="fsHideDelayInput" class="fs-delay-input" value="2.5" min="0" max="30" step="0.5">
           <span class="fs-delay-unit">秒 (0=不隐藏)</span>
         </div>
+        <label class="help-shortcut" style="cursor:pointer;user-select:none">
+          <input type="checkbox" id="skipDeleteConfirmChk" style="accent-color:var(--accent)">
+          <span>删除时不提示确认</span>
+        </label>
         <div class="help-shortcut" style="align-items:flex-start;flex-direction:column;gap:4px">
           <span>排除文件夹（不记录历史）</span>
           <div class="exclude-list" id="excludeList"></div>
@@ -460,7 +475,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
   </div>
   <button class="mobile-more-btn" id="mobileMoreBtn">&#8942;</button>
   <div class="mobile-more-menu" id="mobileMoreMenu">
-    <input type="text" id="mobileSearchInput" class="mobile-search-input" placeholder="搜索文件名..." autocomplete="off">
+    <input type="text" id="mobileSearchInput" class="mobile-search-input" placeholder="搜索（空格分隔多关键词）..." autocomplete="off">
     <div class="mobile-sort-wrap" id="mobileSortWrap">
       <span class="sort-seg" data-sort="name_asc">A-Z</span>
       <span class="sort-seg" data-sort="name_desc">Z-A</span>
@@ -530,6 +545,22 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
           <div class="stream-dropdown" id="streamDropdown">
             <button class="stream-item" id="streamCopyBtn">复制地址</button>
             <button class="stream-item" id="streamOpenBtn">打开地址</button>
+            <div class="stream-player-row">
+              <button class="stream-item" id="streamMpvBtn">MPV 打开</button>
+              <a class="stream-dl" href="https://mpv.io/" target="_blank" rel="noopener noreferrer" title="MPV 官网" onclick="event.stopPropagation()">下载</a>
+            </div>
+            <div class="stream-player-row">
+              <button class="stream-item" id="streamIinaBtn">IINA 打开</button>
+              <a class="stream-dl" href="https://iina.io/" target="_blank" rel="noopener noreferrer" title="IINA 官网" onclick="event.stopPropagation()">下载</a>
+            </div>
+            <div class="stream-player-row">
+              <button class="stream-item" id="streamVlcBtn">VLC 打开</button>
+              <a class="stream-dl" href="https://www.videolan.org/vlc/" target="_blank" rel="noopener noreferrer" title="VLC 官网" onclick="event.stopPropagation()">下载</a>
+            </div>
+            <div class="stream-player-row">
+              <button class="stream-item" id="streamPotBtn">PotPlayer 打开</button>
+              <a class="stream-dl" href="https://github.com/crucialize/potplayer" target="_blank" rel="noopener noreferrer" title="PotPlayer 下载" onclick="event.stopPropagation()">下载</a>
+            </div>
           </div>
         </div>
         <button class="detail-action-btn danger" id="detailDeleteBtn" title="删除 (Del)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button>
@@ -539,6 +570,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
         <button class="btn btn-ghost btn-sm" id="nextBtn" title="下一个 (↓)">下一个</button>
       </div>
       <div class="detail-player" id="detailPlayer" style="position:relative">
+        <div class="mkv-seek-warn" id="mkvSeekWarn"><span>浏览器可能无法播放 MKV，或不支持拖动进度。放不了时用上方「流式播放」里的本地播放器打开。</span><button type="button" id="mkvSeekWarnClose" title="关闭提示" aria-label="关闭">×</button></div>
         <div class="detail-video" id="detailVideoBox"><video id="video" controls loop preload="auto" style="display:none;width:100%;max-height:100%;object-fit:contain"></video></div>
         <div class="video-resize-handle" id="videoResizeHandle"></div>
         <div class="subtitle-panel" id="subtitlePanel">
@@ -606,18 +638,20 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
 </div>
 
 <div class="ctx-menu" id="cardCtxMenu">
-  <div class="ctx-item" id="cardCtxConvert">转换视频</div>
-  <div class="ctx-item" id="cardCtxCover">设置封面</div>
-  <div class="ctx-item danger" id="cardCtxClearCover">清除封面</div>
-  <div class="ctx-item" id="cardCtxRename">重命名</div>
-  <div class="ctx-item danger" id="cardCtxDelete">删除文件</div>
+  <div class="ctx-item" id="cardCtxConvert"><span>转换视频</span></div>
+  <div class="ctx-item" id="cardCtxCover"><span>设置封面</span></div>
+  <div class="ctx-item danger" id="cardCtxClearCover"><span>清除封面</span></div>
+  <div class="ctx-item" id="cardCtxCopyPath"><span>复制文件路径</span><kbd>A</kbd></div>
+  <div class="ctx-item" id="cardCtxRename"><span>重命名</span><kbd>R</kbd></div>
+  <div class="ctx-item danger" id="cardCtxDelete"><span>删除文件</span><kbd>D</kbd></div>
 </div>
 
 <div class="ctx-menu" id="folderCtxMenu">
-  <div class="ctx-item" id="folderCtxNewSub">新建子文件夹</div>
-  <div class="ctx-item" id="folderCtxRename">重命名</div>
-  <div class="ctx-item" id="folderCtxExclude">排除该文件夹</div>
-  <div class="ctx-item danger" id="folderCtxDelete">删除文件夹</div>
+  <div class="ctx-item" id="folderCtxNewSub"><span>新建子文件夹</span></div>
+  <div class="ctx-item" id="folderCtxCopyPath"><span>复制文件夹路径</span></div>
+  <div class="ctx-item" id="folderCtxRename"><span>重命名</span></div>
+  <div class="ctx-item" id="folderCtxExclude"><span>排除该文件夹</span></div>
+  <div class="ctx-item danger" id="folderCtxDelete"><span>删除文件夹</span></div>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -883,25 +917,34 @@ $('#releaseBtn').onclick = async () => {
   }, 1500);
 };
 
-async function refreshCurrentFolder(showToast = true) {
-  if (!S.selPath) return;
-  try {
-    const r = await fetch('/api/local/scan-folder?path=' + encodeURIComponent(S.selPath));
-    if (!r.ok) throw new Error((await r.json()).error);
-    const fresh = await r.json();
-    // Update the tree node in-place
-    const node = findFolder(S.tree, S.selPath);
-    if (node) {
-      node.videos = fresh.videos;
-      // Check if folder structure changed before re-rendering tree
-      const oldFolderPaths = node.folders.map(f => f.path).join(',');
-      const newFolderPaths = fresh.folders.map(f => f.path).join(',');
-      const structureChanged = oldFolderPaths !== newFolderPaths;
-      // Keep existing subfolder data (they may have their own loaded content)
-      const existingSubs = new Map(node.folders.map(f => [f.path, f]));
-      node.folders = fresh.folders.map(f => existingSubs.get(f.path) || f);
-      if (structureChanged) renderTree();
+function removeVideoFromTree(filePath) {
+  if (!S.tree || !filePath) return false;
+  function walk(node) {
+    const n = node.videos.length;
+    node.videos = node.videos.filter(v => v.path !== filePath);
+    if (node.videos.length !== n) return true;
+    for (const f of node.folders) {
+      if (walk(f)) return true;
     }
+    return false;
+  }
+  return walk(S.tree);
+}
+
+async function refreshCurrentFolder(showToast = true) {
+  const root = S.tree?.path;
+  if (!root) return;
+  const viewPath = S.lastBrowsePath || S.selPath || S.currentFolderPath || root;
+  const expandedSnapshot = [...S.expanded];
+  try {
+    // Full tree rescan (same source as first open) — scan-folder alone leaves nested caches stale
+    const r = await fetch('/api/local/directory?path=' + encodeURIComponent(root) + '&_=' + Date.now());
+    if (!r.ok) throw new Error((await r.json()).error);
+    S.tree = await r.json();
+    S.expanded = new Set(expandedSnapshot.filter(p => findFolder(S.tree, p)));
+    if (!S.expanded.has(S.tree.path)) S.expanded.add(S.tree.path);
+    S.selPath = findFolder(S.tree, viewPath) ? viewPath : S.tree.path;
+    renderTree();
     showVideosForFolder(S.selPath);
     if (showToast) toast('已刷新');
   } catch (e) { if (showToast) toast('刷新失败: ' + e.message); }
@@ -1464,7 +1507,7 @@ function filterGrid(query) {
   sortVideos(all);
   updateMediaFilterUI(all);
   const q = query.trim().toLowerCase();
-  let videos = q ? all.filter(f => f.name.toLowerCase().includes(q)) : all;
+  let videos = q ? all.filter(f => matchKeywords(f.name, q) || matchKeywords(f.path, q)) : all;
   videos = applyMediaFilter(videos);
   S.navFiles = videos;
 
@@ -1608,10 +1651,12 @@ $('#refreshCoversBtn').onclick = async () => {
 function setupHover(card, file) {
   const media = card.querySelector('.card-media');
   const vid = media.querySelector('video');
+  // Skip hover preview for formats that need ffmpeg remux (too heavy)
+  if (!vid || needsRemuxPlay(file.path)) return;
   let loaded = false;
   media.addEventListener('mouseenter', () => {
     if (!loaded) {
-      vid.src = '/api/local/stream?path=' + encodeURIComponent(file.path);
+      vid.src = mediaPlayUrl(file.path);
       loaded = true;
     }
     media.classList.add('hovering');
@@ -1740,14 +1785,13 @@ function openDetail(file, noPush) {
     handle.style.display = '';
     if (vbox) { vbox.style.overflow = ''; }
     if (detailImg) detailImg.style.display = 'none';
-    v.src = '/api/local/stream?path=' + encodeURIComponent(file.path);
+    v.src = mediaPlayUrl(file.path);
     v.load();
     v.play().catch(() => {});
     v.oncanplay = () => {
       v.style.opacity = '1';
       _ffLocked = false; _ffActive = false; _setFFOff(v);
       _revLocked = false; _revActive = false; _setRevOff(v);
-      // Resume from saved playback position
       try {
         const entry = getHistory().find(h => h.path === file.path);
         const p = entry ? (entry.progress || 0) : 0;
@@ -1756,6 +1800,12 @@ function openDetail(file, noPush) {
       } catch {}
       v.oncanplay = null;
     };
+  }
+
+  const mkvWarn = $('#mkvSeekWarn');
+  if (mkvWarn) {
+    const dismissed = localStorage.getItem('mkv_seek_warn_dismissed') === '1';
+    mkvWarn.classList.toggle('show', !isImage && isMkvPath(file.path) && !dismissed);
   }
 
   // Drag handle: resize container vertically (persisted) — works for both video & image
@@ -1959,6 +2009,11 @@ function showList() {
 
 $('#backBtn').onclick = showList;
 
+$('#mkvSeekWarnClose')?.addEventListener('click', () => {
+  localStorage.setItem('mkv_seek_warn_dismissed', '1');
+  $('#mkvSeekWarn')?.classList.remove('show');
+});
+
 // Handle browser back/forward
 window.addEventListener('popstate', (e) => {
   const videoParam = new URLSearchParams(location.search).get('video');
@@ -2017,6 +2072,66 @@ $('#streamOpenBtn').onclick = () => {
   window.open(url, '_blank');
   $('#streamDropdown').classList.remove('show');
 };
+
+function openPlayerProtocol(player, streamUrl) {
+  let href = '';
+  if (player === 'mpv') {
+    // mpv-handler: https://github.com/akiirui/mpv-handler
+    const b64 = btoa(unescape(encodeURIComponent(streamUrl)))
+      .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+    href = 'mpv://play/' + b64;
+  } else if (player === 'iina') {
+    href = 'iina://weblink?url=' + encodeURIComponent(streamUrl);
+  } else if (player === 'vlc') {
+    href = 'vlc://' + streamUrl;
+  } else if (player === 'potplayer') {
+    href = 'potplayer://' + streamUrl;
+  } else return;
+  const a = document.createElement('a');
+  a.href = href;
+  a.style.display = 'none';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+}
+
+async function openWithLocalPlayer(player) {
+  if (!S.curFile) return;
+  $('#streamDropdown').classList.remove('show');
+  const labels = { mpv: 'MPV', iina: 'IINA', vlc: 'VLC', potplayer: 'PotPlayer' };
+  const label = labels[player] || player;
+  const streamUrl = location.origin + '/api/local/stream?path=' + encodeURIComponent(S.curFile.path);
+  const onServerMachine = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+
+  if (onServerMachine) {
+    try {
+      const r = await fetch('/api/local/open-player', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: S.curFile.path, player })
+      });
+      const d = await r.json().catch(() => ({}));
+      if (r.ok) { toast('已用 ' + label + ' 打开'); return; }
+      toast(d.error || ('服务器启动 ' + label + ' 失败，尝试本机协议…'));
+    } catch {
+      toast('服务器启动 ' + label + ' 失败，尝试本机协议…');
+    }
+  }
+
+  openPlayerProtocol(player, streamUrl);
+  const hints = {
+    mpv: '（需 mpv-handler）',
+    iina: '（需已安装 IINA）',
+    vlc: '（需系统已注册 vlc://）',
+    potplayer: '（需系统已注册 potplayer://）'
+  };
+  toast(onServerMachine ? ('已尝试唤起本机 ' + label) : ('正在唤起本机 ' + label + (hints[player] || '')));
+}
+
+$('#streamMpvBtn').onclick = () => openWithLocalPlayer('mpv');
+$('#streamIinaBtn').onclick = () => openWithLocalPlayer('iina');
+$('#streamVlcBtn').onclick = () => openWithLocalPlayer('vlc');
+$('#streamPotBtn').onclick = () => openWithLocalPlayer('potplayer');
 
 $('#detailDownloadBtn').onclick = () => {
   if (!S.curFile) return;
@@ -2179,9 +2294,37 @@ function showCardCtxMenu(x, y, file) {
     .catch(() => {});
 
   m.classList.add('show');
-  m.style.left = Math.min(x, window.innerWidth - 130) + 'px';
-  m.style.top = Math.min(y, window.innerHeight - 120) + 'px';
+  m.style.left = Math.min(x, window.innerWidth - 200) + 'px';
+  m.style.top = Math.min(y, window.innerHeight - 200) + 'px';
 }
+
+async function copyTextToClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    try {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.cssText = 'position:fixed;left:-9999px;top:0';
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand('copy');
+      ta.remove();
+      return ok;
+    } catch {
+      prompt('复制以下路径:', text);
+      return false;
+    }
+  }
+}
+
+$('#cardCtxCopyPath').onclick = async () => {
+  if (!ctxCardFile) return;
+  $('#cardCtxMenu').classList.remove('show');
+  const ok = await copyTextToClipboard(ctxCardFile.path);
+  toast(ok ? '路径已复制' : '请手动复制路径');
+};
 
 $('#cardCtxRename').onclick = async () => {
   if (!ctxCardFile) return;
@@ -2216,10 +2359,21 @@ $('#cardCtxRename').onclick = async () => {
 
 $('#cardCtxDelete').onclick = async () => {
   if (!ctxCardFile) return;
-  if (!confirm(`确定删除「${ctxCardFile.name}」？此操作不可撤销。`)) return;
+  if (!skipDeleteConfirm() && !confirm(`确定删除「${ctxCardFile.name}」？此操作不可撤销。`)) return;
+  const filePath = ctxCardFile.path;
   try {
-    const r = await fetch('/api/local/file?path=' + encodeURIComponent(ctxCardFile.path), { method: 'DELETE' });
+    releaseClientMediaForPath(filePath);
+    await new Promise(r => setTimeout(r, 120));
+    try {
+      await fetch('/api/local/release-file', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: filePath })
+      });
+    } catch {}
+    const r = await fetch('/api/local/file?path=' + encodeURIComponent(filePath), { method: 'DELETE' });
     if (!r.ok) throw new Error((await r.json()).error);
+    removeVideoFromTree(filePath);
     toast('已删除');
     await refreshCurrentFolder(false);
   } catch (e) { toast('删除失败: ' + e.message); }
@@ -2252,7 +2406,7 @@ function showConvertMenu(x, y, file) {
         const sizeStr = formatSize(p.estimatedSize);
         const ratio = isCopy ? '' : ` (${Math.round(p.estimatedSize / origSize * 100)}%)`;
         return `<div class="convert-quality-item" data-key="${p.key}">
-          <span class="q-name">${p.name}${isCopy ? '<span class="q-copy">直接复制</span>' : ''}</span>
+          <span class="q-name">${p.name}${isCopy ? '<span class="q-copy">视频复制·音频按需转AAC</span>' : ''}</span>
           <span class="q-size">${sizeStr}${ratio}</span>
         </div>`;
       }).join('');
@@ -2406,19 +2560,47 @@ $('#markEndBtn').onclick = () => { markE = parseFloat($('#video').currentTime.to
 })();
 
 // ── Keyboard Actions ──
+function releaseClientMediaForPath(filePath) {
+  const enc = encodeURIComponent(filePath);
+  document.querySelectorAll('video').forEach(vid => {
+    const src = vid.currentSrc || vid.src || '';
+    if (!src) return;
+    if (src.includes(enc) || src.includes(filePath)) {
+      try { vid.pause(); } catch {}
+      vid.removeAttribute('src');
+      try { vid.load(); } catch {}
+    }
+  });
+  document.querySelectorAll('.card-media.hovering').forEach(m => m.classList.remove('hovering'));
+  const detailImg = $('#detailImage');
+  if (detailImg && detailImg.src && (detailImg.src.includes(enc) || detailImg.src.includes(filePath))) {
+    detailImg.removeAttribute('src');
+  }
+}
+
 async function deleteCurrentVideo() {
   if (!S.curFile) return;
-  if (!confirm(`确定删除「${S.curFile.name}」？此操作不可撤销。`)) return;
+  if (!skipDeleteConfirm() && !confirm(`确定删除「${S.curFile.name}」？此操作不可撤销。`)) return;
+  const filePath = S.curFile.path;
   try {
-    // Clear video element first to release file handle
-    const v = $('#video');
-    v.pause(); v.removeAttribute('src'); v.load();
-    const r = await fetch('/api/local/file?path=' + encodeURIComponent(S.curFile.path), { method: 'DELETE' });
+    // Drop all browser media requests for this file so Node can close FDs
+    releaseClientMediaForPath(filePath);
+    await new Promise(r => setTimeout(r, 120));
+    try {
+      await fetch('/api/local/release-file', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: filePath })
+      });
+    } catch {}
+    await new Promise(r => setTimeout(r, 80));
+
+    const r = await fetch('/api/local/file?path=' + encodeURIComponent(filePath), { method: 'DELETE' });
     if (!r.ok) throw new Error((await r.json()).error);
+    removeVideoFromTree(filePath);
     S.curFile = null;
     toast('已删除');
     await refreshCurrentFolder(false);
-    // Navigate to next/prev or back to list
     if (S.navFiles.length === 0) { showList(); return; }
     if (S.navIdx >= S.navFiles.length) S.navIdx = S.navFiles.length - 1;
     openDetail(S.navFiles[S.navIdx]);
@@ -2563,13 +2745,26 @@ document.addEventListener('fullscreenchange', () => {
 
 document.addEventListener('keydown', e => {
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+  // Card context menu shortcuts (while menu is open)
+  if ($('#cardCtxMenu')?.classList.contains('show') && !e.ctrlKey && !e.metaKey && !e.altKey) {
+    if (e.key === 'a' || e.key === 'A') { e.preventDefault(); $('#cardCtxCopyPath').click(); return; }
+    if (e.key === 'r' || e.key === 'R') { e.preventDefault(); $('#cardCtxRename').click(); return; }
+    if (e.key === 'd' || e.key === 'D') { e.preventDefault(); $('#cardCtxDelete').click(); return; }
+    if (e.key === 'Escape') { e.preventDefault(); $('#cardCtxMenu').classList.remove('show'); return; }
+  }
+  // Ctrl/Cmd+R: refresh folder list (don't let rename steal it)
+  if ((e.ctrlKey || e.metaKey) && (e.key === 'r' || e.key === 'R')) {
+    e.preventDefault();
+    refreshCurrentFolder(true);
+    return;
+  }
   // Detail view navigation
   if ($('#detailView').style.display !== 'none') {
     if (e.key === 'ArrowUp') { e.preventDefault(); $('#prevBtn').click(); }
     if (e.key === 'ArrowDown') { e.preventDefault(); $('#nextBtn').click(); }
     if (e.key === 'Escape') { if (document.fullscreenElement) document.exitFullscreen(); else $('#backBtn').click(); }
     if (e.key === 'f' || e.key === 'F') { e.preventDefault(); if (document.fullscreenElement) document.exitFullscreen(); else $('#detailVideoBox').requestFullscreen().catch(() => {}); }
-    if (e.key === 'r' || e.key === 'R') { e.preventDefault(); renameCurrentVideo(); }
+    if ((e.key === 'r' || e.key === 'R') && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); renameCurrentVideo(); }
     if (e.key === 'Delete') { e.preventDefault(); deleteCurrentVideo(); }
     if (e.key === 'z' || e.key === 'Z') { e.preventDefault(); toggleStar(); }
     if (e.key === 'p' || e.key === 'P') { e.preventDefault(); toggleControls(); }
@@ -2625,17 +2820,30 @@ document.addEventListener('fullscreenchange', () => {
     document.removeEventListener('touchstart', _fsShowControls);
   }
 });
+function skipDeleteConfirm() {
+  return localStorage.getItem('skip_delete_confirm') === '1';
+}
+
 // Sync settings UI with localStorage
 (function() {
   const input = $('#fsHideDelayInput');
-  if (!input) return;
-  const saved = localStorage.getItem('fsHideDelay');
-  if (saved !== null) input.value = saved;
-  input.addEventListener('input', () => {
-    const v = parseFloat(input.value);
-    if (isNaN(v) || v < 0) return;
-    localStorage.setItem('fsHideDelay', String(v));
-  });
+  if (input) {
+    const saved = localStorage.getItem('fsHideDelay');
+    if (saved !== null) input.value = saved;
+    input.addEventListener('input', () => {
+      const v = parseFloat(input.value);
+      if (isNaN(v) || v < 0) return;
+      localStorage.setItem('fsHideDelay', String(v));
+    });
+  }
+  const skipDel = $('#skipDeleteConfirmChk');
+  if (skipDel) {
+    skipDel.checked = skipDeleteConfirm();
+    skipDel.addEventListener('change', () => {
+      localStorage.setItem('skip_delete_confirm', skipDel.checked ? '1' : '0');
+      toast(skipDel.checked ? '已关闭删除确认' : '已开启删除确认');
+    });
+  }
 })();
 
 // ── Preview ──
@@ -2726,6 +2934,13 @@ function showFolderCtxMenu(x, y, folderPath) {
   $('#folderCtxExclude').textContent = excluded ? '取消排除该文件夹' : '排除该文件夹';
 }
 
+$('#folderCtxCopyPath').onclick = async () => {
+  if (!ctxFolderPath) return;
+  $('#folderCtxMenu').classList.remove('show');
+  const ok = await copyTextToClipboard(ctxFolderPath);
+  toast(ok ? '路径已复制' : '请手动复制路径');
+};
+
 $('#folderCtxNewSub').onclick = async () => {
   if (!ctxFolderPath) return;
   const name = prompt('新文件夹名称');
@@ -2797,7 +3012,7 @@ $('#folderCtxExclude').onclick = async () => {
 $('#folderCtxDelete').onclick = async () => {
   if (!ctxFolderPath) return;
   if (ctxFolderPath === S.tree.path) return toast('不能删除根文件夹');
-  if (!confirm('确定删除此文件夹及其所有内容？')) return;
+  if (!skipDeleteConfirm() && !confirm('确定删除此文件夹及其所有内容？')) return;
   try {
     const r = await fetch('/api/local/folder?path=' + encodeURIComponent(ctxFolderPath), { method: 'DELETE' });
     if (!r.ok) throw new Error((await r.json()).error);
@@ -3840,7 +4055,7 @@ function preloadDouyinAround(activeIdx) {
     if (!vid) return;
     const dist = Math.abs(i - activeIdx);
     const path = slide.dataset.path;
-    const url = '/api/local/stream?path=' + encodeURIComponent(path);
+    const url = mediaPlayUrl(path);
     if (dist <= 1) {
       if (!vid.getAttribute('src')) {
         vid.preload = 'auto';
@@ -3867,7 +4082,7 @@ function setupDouyinSlideInteractions(slide, vid, f) {
   function ensureSrc() {
     if (!vid.getAttribute('src')) {
       vid.preload = 'auto';
-      vid.src = '/api/local/stream?path=' + encodeURIComponent(f.path);
+      vid.src = mediaPlayUrl(f.path);
     }
   }
   function setSpeed(rate) {
@@ -3981,8 +4196,9 @@ function enterDouyinMode(startFile) {
     slide.dataset.path = f.path;
     slide.dataset.idx = String(i);
     const near = Math.abs(i - startIdx) <= 1;
+    const srcAttr = near ? ` src="${mediaPlayUrl(f.path)}"` : '';
     slide.innerHTML = `
-      <video playsinline loop preload="${near ? 'auto' : 'none'}" ${near ? `src="/api/local/stream?path=${encodeURIComponent(f.path)}"` : ''}></video>
+      <video playsinline loop preload="${near ? 'auto' : 'none'}"${srcAttr}></video>
       <button type="button" class="douyin-speed-btn" title="切换倍速">1x</button>
       <div class="douyin-slide-meta">
         <div class="douyin-slide-progress">
@@ -4020,7 +4236,7 @@ function enterDouyinMode(startFile) {
         preloadDouyinAround(idx);
         if (!vid.getAttribute('src')) {
           vid.preload = 'auto';
-          vid.src = '/api/local/stream?path=' + encodeURIComponent(slide.dataset.path);
+          vid.src = mediaPlayUrl(slide.dataset.path);
         }
         feed.querySelectorAll('video').forEach(v => {
           if (v !== vid) {
@@ -4057,7 +4273,7 @@ function enterDouyinMode(startFile) {
     if (vid) {
       if (!vid.getAttribute('src')) {
         vid.preload = 'auto';
-        vid.src = '/api/local/stream?path=' + encodeURIComponent(target.dataset.path);
+        vid.src = mediaPlayUrl(target.dataset.path);
       }
       feed.querySelectorAll('video').forEach(v => { if (v !== vid) v.pause(); });
       vid.muted = false;

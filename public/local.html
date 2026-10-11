@@ -289,7 +289,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
     <a href="/converter.html"><span class="mode-icon">🔄</span>超级转换器</a>
     <a href="/resources.html"><span class="mode-icon">📦</span>资源获取</a>
   </div>
-  <input type="text" id="searchInput" class="search-input" placeholder="搜索文件名..." autocomplete="off">
+  <input type="text" id="searchInput" class="search-input" placeholder="搜索文件名（空格分隔多关键词）..." autocomplete="off">
   <div class="sort-wrap" id="sortWrap">
     <span class="sort-seg active" data-sort="name_asc">A-Z</span>
     <span class="sort-seg" data-sort="name_desc">Z-A</span>
@@ -339,7 +339,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
   </div>
   <button class="mobile-more-btn" id="mobileMoreBtn">&#8942;</button>
   <div class="mobile-more-menu" id="mobileMoreMenu">
-    <input type="text" id="mobileSearchInput" class="mobile-search-input" placeholder="搜索文件名..." autocomplete="off">
+    <input type="text" id="mobileSearchInput" class="mobile-search-input" placeholder="搜索（空格分隔多关键词）..." autocomplete="off">
     <div class="mobile-sort-wrap" id="mobileSortWrap">
       <span class="sort-seg active" data-sort="name_asc">A-Z</span>
       <span class="sort-seg" data-sort="name_desc">Z-A</span>
@@ -2146,14 +2146,14 @@ function filterGridLocal() {
     document.querySelectorAll('#grid .card').forEach(card => {
       const name = card.querySelector('.card-name');
       if (!name) return;
-      card.style.display = (!q || name.textContent.toLowerCase().includes(q)) ? '' : 'none';
+      card.style.display = (!q || matchKeywords(name.textContent, q)) ? '' : 'none';
     });
     return;
   }
   const all = getAllVideos(folder);
   sortVideos(all);
   updateMediaFilterUI(all);
-  const filtered = applyMediaFilter(all).filter(f => !q || f.name.toLowerCase().includes(q));
+  const filtered = applyMediaFilter(all).filter(f => !q || matchKeywords(f.name, q) || matchKeywords(f.relPath, q));
   S.navFiles = filtered;
   const visible = new Set(filtered.map(f => f.relPath));
   document.querySelectorAll('#grid .card').forEach(card => {

@@ -15,7 +15,7 @@ const PUBLIC_DIR = process.pkg ? path.join(__dirname, 'public') : path.join(BASE
 
 // Video quality presets for transcoding
 const QUALITY_PRESETS = {
-  copy: { name: '直接复制', vbitrate: 0, abitrate: 0, scale: null },
+  copy: { name: '快速转封装', vbitrate: 0, abitrate: 0, scale: null },
   '1080p-high': { name: '1080p 高画质', vbitrate: 8000, abitrate: 128, scale: 1080 },
   '1080p': { name: '1080p 省空间', vbitrate: 4000, abitrate: 128, scale: 1080 },
   '720p': { name: '720p 手机', vbitrate: 2000, abitrate: 96, scale: 720 },
@@ -432,6 +432,7 @@ app.get('/api/local/directory', (req, res) => {
       return { name: path.basename(dir), path: dir, videos, folders, hasThumb };
     }
 
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
     res.json(scan(dirPath));
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -480,6 +481,7 @@ app.get('/api/local/scan-folder', (req, res) => {
     videos.sort((a, b) => a.name.localeCompare(b.name));
     folders.sort((a, b) => a.name.localeCompare(b.name));
     const hasThumb = fs.existsSync(path.join(dirPath, '.TThumb.PNG'));
+    res.set('Cache-Control', 'no-store, no-cache, must-revalidate');
     res.json({ name: path.basename(dirPath), path: dirPath, videos, folders, hasThumb });
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -487,27 +489,72 @@ app.get('/api/local/scan-folder', (req, res) => {
 });
 
 // Track open file streams so we can destroy them before deletion
-const openStreams = new Map(); // filePath -> Set of {stream, res}
+const openStreams = new Map(); // resolvedPath -> Set of {stream, res}
+
+function streamKey(filePath) {
+  try { return path.resolve(filePath); } catch { return filePath; }
+}
+
+function pathsMatch(a, b) {
+  if (!a || !b) return false;
+  if (a === b) return true;
+  const na = streamKey(a);
+  const nb = streamKey(b);
+  if (na === nb) return true;
+  if (process.platform === 'win32') return na.toLowerCase() === nb.toLowerCase();
+  return false;
+}
+
+function trackOpenStream(filePath, stream, res) {
+  const key = streamKey(filePath);
+  if (!openStreams.has(key)) openStreams.set(key, new Set());
+  const entry = { stream, res };
+  openStreams.get(key).add(entry);
+  let done = false;
+  const cleanup = () => {
+    if (done) return;
+    done = true;
+    const s = openStreams.get(key);
+    if (s) { s.delete(entry); if (s.size === 0) openStreams.delete(key); }
+  };
+  stream.on('end', cleanup);
+  stream.on('close', cleanup);
+  stream.on('error', cleanup);
+  res.on('close', cleanup);
+  return entry;
+}
 
 function killStreams(filePath) {
   return new Promise(resolve => {
-    const set = openStreams.get(filePath);
-    if (!set || set.size === 0) return resolve();
-    let remaining = set.size;
+    const entries = [];
+    const keysToDelete = [];
+    for (const [k, set] of openStreams) {
+      if (pathsMatch(k, filePath)) {
+        for (const e of set) entries.push(e);
+        keysToDelete.push(k);
+      }
+    }
+    for (const k of keysToDelete) openStreams.delete(k);
+    if (!entries.length) return resolve();
+
+    console.log('[killStreams]', filePath, '→', entries.length, 'stream(s)');
+    let remaining = entries.length;
     const timer = setTimeout(() => {
-      // Safety timeout: resolve after 2s even if not all streams closed
-      console.log('[killStreams] timeout, proceeding with', remaining, 'streams still open');
+      console.log('[killStreams] timeout,', remaining, 'still open');
       resolve();
     }, 2000);
-    for (const s of set) {
-      const onClose = () => {
-        remaining--;
-        if (remaining <= 0) { clearTimeout(timer); resolve(); }
-      };
-      s.stream.once('close', onClose);
-      s.stream.once('error', onClose);
-      try { s.stream.destroy(); } catch {}
-      try { s.res.end(); } catch {}
+    const onDone = () => {
+      remaining--;
+      if (remaining <= 0) { clearTimeout(timer); resolve(); }
+    };
+    for (const s of entries) {
+      try { s.stream.unpipe(); } catch {}
+      s.stream.once('close', onDone);
+      s.stream.once('end', onDone);
+      s.stream.once('error', onDone);
+      try { s.stream.destroy(); } catch { onDone(); }
+      try { if (s.res && !s.res.writableEnded) s.res.end(); } catch {}
+      try { if (s.res && typeof s.res.destroy === 'function') s.res.destroy(); } catch {}
     }
   });
 }
@@ -542,20 +589,6 @@ app.get('/api/local/stream', (req, res) => {
       // Fall through to streaming for very large images
     }
 
-    function track(stream) {
-      if (!openStreams.has(filePath)) openStreams.set(filePath, new Set());
-      const entry = { stream, res };
-      openStreams.get(filePath).add(entry);
-      const cleanup = () => {
-        const s = openStreams.get(filePath);
-        if (s) { s.delete(entry); if (s.size === 0) openStreams.delete(filePath); }
-      };
-      stream.on('end', cleanup);
-      stream.on('close', cleanup);
-      stream.on('error', cleanup);
-      res.on('close', cleanup);
-    }
-
     const range = req.headers.range;
     if (range) {
       const parts = range.replace(/bytes=/, '').split('-');
@@ -580,7 +613,7 @@ app.get('/api/local/stream', (req, res) => {
         if (!res.headersSent) res.status(500).send('Stream error');
         else res.end();
       });
-      track(stream);
+      trackOpenStream(filePath, stream, res);
       stream.pipe(res);
     } else {
       const fullHeaders = { 'Content-Length': stat.size, 'Content-Type': contentType, 'Accept-Ranges': 'bytes' };
@@ -592,13 +625,264 @@ app.get('/api/local/stream', (req, res) => {
         if (!res.headersSent) res.status(500).send('Stream error');
         else res.end();
       });
-      track(stream);
+      trackOpenStream(filePath, stream, res);
       stream.pipe(res);
     }
   } catch (err) {
     console.error('Stream 404:', filePath, '-', err.message);
-    if (!res.headersSent) res.status(404).send('File not found');
+    if (!res.headersSent)   res.status(404).send('File not found');
   }
+});
+
+// ── Browser-playable remux cache (MKV/AVI/… → seekable MP4 on disk) ──
+const REMUX_EXTS = new Set(['.mkv', '.avi', '.wmv', '.flv', '.ts', '.m2ts']);
+const PLAY_CACHE_DIR = path.join(UPLOADS, 'play-cache');
+if (!fs.existsSync(PLAY_CACHE_DIR)) fs.mkdirSync(PLAY_CACHE_DIR, { recursive: true });
+const _playCacheJobs = new Map(); // hash -> Promise<string outPath>
+
+function playCacheKey(filePath) {
+  const st = fs.statSync(filePath);
+  return require('crypto').createHash('md5')
+    .update(filePath + '@' + st.size + '@' + Math.floor(st.mtimeMs))
+    .digest('hex');
+}
+
+function runFfmpegArgs(args) {
+  return new Promise((resolve, reject) => {
+    const ff = spawn('ffmpeg', args, { stdio: ['ignore', 'ignore', 'pipe'] });
+    let err = '';
+    ff.stderr.on('data', d => {
+      err += d.toString();
+      if (err.length > 4000) err = err.slice(-3000);
+    });
+    ff.on('error', reject);
+    ff.on('close', code => {
+      if (code === 0) resolve();
+      else reject(new Error((err || 'ffmpeg failed').slice(-500)));
+    });
+  });
+}
+
+async function ensurePlayCache(filePath) {
+  const hash = playCacheKey(filePath);
+  const outPath = path.join(PLAY_CACHE_DIR, hash + '.mp4');
+  if (fs.existsSync(outPath) && fs.statSync(outPath).size > 1000) return outPath;
+  if (_playCacheJobs.has(hash)) return _playCacheJobs.get(hash);
+
+  const job = (async () => {
+    const tmp = outPath + '.tmp.' + process.pid;
+    try { fs.unlinkSync(tmp); } catch {}
+    const common = ['-y', '-hide_banner', '-loglevel', 'error', '-i', filePath, '-map', '0:v:0', '-map', '0:a:0?', '-sn', '-dn'];
+    try {
+      // Fast path: stream copy into seekable MP4 (works for H.264/AAC etc.)
+      await runFfmpegArgs([...common, '-c', 'copy', '-movflags', '+faststart', tmp]);
+    } catch (e1) {
+      console.warn('[play-cache] copy failed, retry with aac:', e1.message);
+      try { fs.unlinkSync(tmp); } catch {}
+      // Keep video copy, re-encode audio to AAC for MP4 compatibility
+      await runFfmpegArgs([...common, '-c:v', 'copy', '-c:a', 'aac', '-ac', '2', '-b:a', '192k', '-movflags', '+faststart', tmp]);
+    }
+    if (!fs.existsSync(tmp) || fs.statSync(tmp).size < 1000) {
+      try { fs.unlinkSync(tmp); } catch {}
+      throw new Error('remux produced empty file');
+    }
+    try { fs.unlinkSync(outPath); } catch {}
+    fs.renameSync(tmp, outPath);
+    console.log('[play-cache] ready:', path.basename(filePath), '->', hash + '.mp4');
+    return outPath;
+  })();
+
+  _playCacheJobs.set(hash, job);
+  try {
+    return await job;
+  } finally {
+    _playCacheJobs.delete(hash);
+  }
+}
+
+function sendMp4WithRange(filePath, req, res) {
+  const stat = fs.statSync(filePath);
+  const contentType = 'video/mp4';
+  const range = req.headers.range;
+  if (range) {
+    const parts = range.replace(/bytes=/, '').split('-');
+    const start = parseInt(parts[0], 10);
+    const end = parts[1] ? parseInt(parts[1], 10) : stat.size - 1;
+    const safeEnd = Math.min(end, stat.size - 1);
+    if (start > safeEnd || start >= stat.size) {
+      res.writeHead(416, { 'Content-Range': `bytes */${stat.size}` });
+      return res.end();
+    }
+    res.writeHead(206, {
+      'Content-Range': `bytes ${start}-${safeEnd}/${stat.size}`,
+      'Accept-Ranges': 'bytes',
+      'Content-Length': safeEnd - start + 1,
+      'Content-Type': contentType,
+      'Cache-Control': 'public, max-age=86400'
+    });
+    const stream = fs.createReadStream(filePath, { start, end: safeEnd });
+    stream.on('error', () => { if (!res.headersSent) res.status(500).end(); else res.end(); });
+    trackOpenStream(filePath, stream, res);
+    stream.pipe(res);
+  } else {
+    res.writeHead(200, {
+      'Content-Length': stat.size,
+      'Content-Type': contentType,
+      'Accept-Ranges': 'bytes',
+      'Cache-Control': 'public, max-age=86400'
+    });
+    const stream = fs.createReadStream(filePath);
+    stream.on('error', () => { if (!res.headersSent) res.status(500).end(); else res.end(); });
+    trackOpenStream(filePath, stream, res);
+    stream.pipe(res);
+  }
+}
+
+app.get('/api/local/play-ready', (req, res) => {
+  const filePath = req.query.path;
+  if (!filePath) return res.status(400).json({ error: 'No path' });
+  if (!pathIsAllowed(filePath)) return res.status(403).json({ error: 'Forbidden' });
+  if (!fs.existsSync(filePath)) return res.status(404).json({ ready: false, remux: false });
+  const ext = path.extname(filePath).toLowerCase();
+  if (!REMUX_EXTS.has(ext)) return res.json({ ready: true, remux: false });
+  try {
+    const hash = playCacheKey(filePath);
+    const outPath = path.join(PLAY_CACHE_DIR, hash + '.mp4');
+    const ready = fs.existsSync(outPath) && fs.statSync(outPath).size > 1000;
+    const preparing = _playCacheJobs.has(hash);
+    res.json({ ready, remux: true, preparing });
+  } catch {
+    res.json({ ready: false, remux: true });
+  }
+});
+
+app.get('/api/local/play', async (req, res) => {
+  const filePath = req.query.path;
+  if (!filePath) return res.status(400).send('No path');
+  if (!pathIsAllowed(filePath)) return res.status(403).send('Forbidden');
+  if (!fs.existsSync(filePath)) return res.status(404).send('File not found');
+
+  const ext = path.extname(filePath).toLowerCase();
+  if (!REMUX_EXTS.has(ext)) {
+    return res.redirect(302, '/api/local/stream?path=' + encodeURIComponent(filePath));
+  }
+
+  try {
+    const cached = await ensurePlayCache(filePath);
+    sendMp4WithRange(cached, req, res);
+  } catch (err) {
+    console.error('[play] remux failed:', filePath, err.message);
+    if (!res.headersSent) res.status(500).send('Remux failed: ' + err.message);
+  }
+});
+
+// ── Open file in local player (MPV / VLC / IINA) on the machine running this server ──
+function firstExisting(candidates) {
+  for (const c of candidates) {
+    if (c && fs.existsSync(c)) return c;
+  }
+  return null;
+}
+
+function resolvePlayerLaunch(player, filePath) {
+  const p = (player || 'mpv').toLowerCase();
+  if (p === 'mpv') {
+    const bin = process.env.MPV_PATH || firstExisting([
+      process.platform === 'win32' && 'C:\\Program Files\\mpv\\mpv.exe',
+      process.platform === 'win32' && 'C:\\Program Files (x86)\\mpv\\mpv.exe',
+      process.platform === 'win32' && path.join(process.env.LOCALAPPDATA || '', 'Programs', 'mpv', 'mpv.exe'),
+      process.platform === 'win32' && path.join(process.env.LOCALAPPDATA || '', 'Microsoft', 'WinGet', 'Links', 'mpv.exe'),
+      process.platform === 'darwin' && '/Applications/mpv.app/Contents/MacOS/mpv',
+      process.platform === 'darwin' && '/opt/homebrew/bin/mpv',
+      process.platform === 'darwin' && '/usr/local/bin/mpv'
+    ]) || 'mpv';
+    return { bin, args: ['--force-window=immediate', '--', filePath], label: 'MPV' };
+  }
+  if (p === 'vlc') {
+    const bin = process.env.VLC_PATH || firstExisting([
+      process.platform === 'win32' && 'C:\\Program Files\\VideoLAN\\VLC\\vlc.exe',
+      process.platform === 'win32' && 'C:\\Program Files (x86)\\VideoLAN\\VLC\\vlc.exe',
+      process.platform === 'darwin' && '/Applications/VLC.app/Contents/MacOS/VLC',
+      process.platform === 'linux' && '/usr/bin/vlc'
+    ]) || 'vlc';
+    return { bin, args: ['--', filePath], label: 'VLC' };
+  }
+  if (p === 'iina') {
+    if (process.platform === 'darwin') {
+      const cli = firstExisting([
+        '/Applications/IINA.app/Contents/MacOS/iina-cli',
+        '/opt/homebrew/bin/iina-cli',
+        '/usr/local/bin/iina-cli'
+      ]);
+      if (cli) return { bin: cli, args: [filePath], label: 'IINA' };
+      return { bin: 'open', args: ['-a', 'IINA', filePath], label: 'IINA' };
+    }
+    return null;
+  }
+  if (p === 'potplayer' || p === 'pot') {
+    const bin = process.env.POTPLAYER_PATH || firstExisting([
+      process.platform === 'win32' && 'C:\\Program Files\\DAUM\\PotPlayer\\PotPlayerMini64.exe',
+      process.platform === 'win32' && 'C:\\Program Files\\DAUM\\PotPlayer\\PotPlayerMini.exe',
+      process.platform === 'win32' && 'C:\\Program Files (x86)\\DAUM\\PotPlayer\\PotPlayerMini64.exe',
+      process.platform === 'win32' && 'C:\\Program Files (x86)\\DAUM\\PotPlayer\\PotPlayerMini.exe',
+      process.platform === 'win32' && 'C:\\Program Files\\DAUM\\PotPlayer\\PotPlayer64.exe',
+      process.platform === 'win32' && 'C:\\Program Files\\DAUM\\PotPlayer\\PotPlayer.exe'
+    ]);
+    if (!bin) {
+      if (process.platform !== 'win32') return null;
+      return { bin: 'PotPlayerMini64.exe', args: [filePath], label: 'PotPlayer' };
+    }
+    return { bin, args: [filePath], label: 'PotPlayer' };
+  }
+  return null;
+}
+
+function handleOpenPlayer(req, res) {
+  const filePath = req.body?.path || req.query.path;
+  const player = (req.body?.player || req.query.player || 'mpv').toLowerCase();
+  if (!filePath) return res.status(400).json({ error: 'No path' });
+  if (!pathIsAllowed(filePath)) return res.status(403).json({ error: 'Forbidden' });
+  if (!fs.existsSync(filePath)) return res.status(404).json({ error: 'File not found' });
+
+  const launch = resolvePlayerLaunch(player, filePath);
+  if (!launch) {
+    const err =
+      player === 'iina' ? 'IINA 仅支持 macOS'
+      : (player === 'potplayer' || player === 'pot') ? 'PotPlayer 仅支持 Windows'
+      : '未知播放器';
+    return res.status(400).json({ error: err });
+  }
+
+  let responded = false;
+  const done = (status, body) => {
+    if (responded) return;
+    responded = true;
+    res.status(status).json(body);
+  };
+
+  try {
+    const child = spawn(launch.bin, launch.args, {
+      detached: true,
+      stdio: 'ignore',
+      shell: false,
+      windowsHide: false
+    });
+    child.on('error', (err) => {
+      console.error('[open-player]', player, 'spawn error:', err.message);
+      done(500, { error: `无法启动 ${launch.label}，请确认已安装（或设置 ${player.toUpperCase()}_PATH）` });
+    });
+    child.unref();
+    setTimeout(() => done(200, { ok: true, player }), 250);
+  } catch (err) {
+    done(500, { error: err.message || '播放器启动失败' });
+  }
+}
+
+app.post('/api/local/open-player', handleOpenPlayer);
+app.post('/api/local/open-mpv', (req, res) => {
+  if (!req.body) req.body = {};
+  req.body.player = 'mpv';
+  handleOpenPlayer(req, res);
 });
 
 // ── Release all open file handles (for safe folder deletion) ──
@@ -1061,16 +1345,11 @@ app.post('/api/history-exclude', (req, res) => {
   res.json({ success: true, excludes });
 });
 
-// Server-side file operations
-app.get('/api/local/reveal', (req, res) => {
-  const filePath = req.query.path;
+app.post('/api/local/release-file', async (req, res) => {
+  const filePath = req.body?.path || req.query.path;
   if (!filePath) return res.status(400).json({ error: '缺少路径' });
-  try {
-    execFile('explorer.exe', ['/select,' + filePath], err => {
-      // explorer.exe /select returns non-zero even on success, ignore errors
-      res.json({ success: true });
-    });
-  } catch (err) { res.status(500).json({ error: err.message }); }
+  await killStreams(filePath);
+  res.json({ ok: true });
 });
 
 app.delete('/api/local/file', async (req, res) => {
@@ -1085,31 +1364,42 @@ app.delete('/api/local/file', async (req, res) => {
     }
     // Kill any open streams for this file and wait for FDs to close
     await killStreams(filePath);
-    // Small extra delay for Windows UNC paths to release file locks
-    await new Promise(r => setTimeout(r, 200));
+    await new Promise(r => setTimeout(r, 150));
+    // Second pass in case browser re-requested during the first kill
+    await killStreams(filePath);
+    await new Promise(r => setTimeout(r, 100));
 
-    // Try unlink, retry once if file still exists (Windows UNC lock issue)
-    fs.unlinkSync(filePath);
-    if (fs.existsSync(filePath)) {
-      console.log('[delete] still exists, retrying in 500ms...');
-      await new Promise(r => setTimeout(r, 500));
-      try { fs.unlinkSync(filePath); } catch {}
+    const delays = [0, 200, 500, 1000];
+    let lastErr = null;
+    for (const d of delays) {
+      if (d) await new Promise(r => setTimeout(r, d));
+      await killStreams(filePath);
+      try {
+        fs.unlinkSync(filePath);
+        if (!fs.existsSync(filePath)) {
+          console.log('[delete] OK:', filePath);
+          return res.json({ success: true });
+        }
+      } catch (e) {
+        lastErr = e;
+        console.log('[delete] unlink retry:', e.message);
+      }
     }
+
     if (fs.existsSync(filePath)) {
-      console.log('[delete] STILL EXISTS after retry:', filePath);
-      // Last resort: move to temp so it's out of sight
+      console.log('[delete] STILL EXISTS after retries:', filePath, lastErr?.message || '');
       const tempDir = path.join(os.tmpdir(), 'videos-tricks-deleted');
       if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
       const tempPath = path.join(tempDir, `${Date.now()}_${path.basename(filePath)}`);
       try {
+        await killStreams(filePath);
         fs.renameSync(filePath, tempPath);
         console.log('[delete] moved to temp:', tempPath);
-        res.json({ success: true });
-        return;
+        return res.json({ success: true, moved: true });
       } catch (e) {
         console.log('[delete] move failed:', e.message);
       }
-      return res.status(500).json({ error: '文件删除失败 (仍存在)' });
+      return res.status(500).json({ error: lastErr?.message || '文件删除失败 (仍被占用)' });
     }
     console.log('[delete] OK:', filePath);
     res.json({ success: true });
@@ -1225,6 +1515,36 @@ app.patch('/api/local/move-folder', async (req, res) => {
 });
 
 // ── MKV to MP4 conversion (SSE streaming with progress) ──
+// Audio codecs that browsers can play inside MP4 with stream-copy
+const BROWSER_SAFE_AUDIO = new Set(['aac', 'mp3']);
+
+function probeFirstAudioCodec(filePath) {
+  return new Promise((resolve) => {
+    execFile('ffprobe', [
+      '-v', 'error',
+      '-select_streams', 'a:0',
+      '-show_entries', 'stream=codec_name',
+      '-of', 'default=noprint_wrappers=1:nokey=1',
+      filePath
+    ], (err, stdout) => {
+      if (err) return resolve('');
+      resolve((stdout || '').trim().toLowerCase().split(/\r?\n/)[0] || '');
+    });
+  });
+}
+
+/** Build ffmpeg args for fast MKV→MP4: copy video; copy audio only if browser-safe, else AAC. */
+function buildFastRemuxArgs(input, output, aCodec) {
+  const base = ['-y', '-hide_banner', '-i', input, '-map', '0:v:0', '-map', '0:a:0?', '-sn', '-dn', '-movflags', '+faststart'];
+  if (BROWSER_SAFE_AUDIO.has(aCodec)) {
+    return { args: [...base, '-c', 'copy', output], audioMode: 'copy' };
+  }
+  return {
+    args: [...base, '-c:v', 'copy', '-c:a', 'aac', '-ac', '2', '-b:a', '192k', output],
+    audioMode: aCodec ? 'aac-from-' + aCodec : 'aac'
+  };
+}
+
 // ── Probe video info (duration, size) for quality estimation ──
 app.get('/api/local/probe', (req, res) => {
   const filePath = req.query.filePath;
@@ -1288,7 +1608,7 @@ app.get('/api/local/convert-mkv-stream', (req, res) => {
   execFile('ffprobe', [
     '-v', 'error', '-show_entries', 'format=duration',
     '-of', 'default=noprint_wrappers=1:nokey=1', filePath
-  ], (err, stdout) => {
+  ], async (err, stdout) => {
     const totalDuration = err ? 0 : parseFloat(stdout.trim()) || 0;
 
     console.log('[convert-mkv] starting:', filePath, 'quality:', quality, 'duration:', totalDuration);
@@ -1298,13 +1618,19 @@ app.get('/api/local/convert-mkv-stream', (req, res) => {
     let ffmpegProcess;
 
     if (isCopy) {
-      // Stream copy (fast, no re-encode)
-      ffmpegProcess = execFile('ffmpeg', [
-        '-y', '-i', filePath,
-        '-map', '0:v', '-map', '0:a',
-        '-c', 'copy',
-        mp4Path
-      ], handleDone);
+      // Fast remux: copy video; only copy audio if browser can play it in MP4
+      const aCodec = await probeFirstAudioCodec(filePath);
+      const { args, audioMode } = buildFastRemuxArgs(filePath, mp4Path, aCodec);
+      console.log('[convert-mkv] copy mode audio:', aCodec || '(none)', '->', audioMode);
+      if (audioMode !== 'copy') {
+        send({ progress: 0, phase: aCodec ? `音频转 AAC (${aCodec})` : '封装中' });
+      } else {
+        send({ progress: 0, phase: '封装中' });
+      }
+      ffmpegProcess = execFile('ffmpeg', args, handleDone);
+      attachProgress(ffmpegProcess, totalDuration, audioMode === 'copy' ? '封装中' : '音频转码中');
+      req.on('close', () => killProcess(ffmpegProcess));
+      return;
     } else {
       // Two-pass encoding
       const vBitrate = preset.vbitrate + 'k';
@@ -1314,7 +1640,7 @@ app.get('/api/local/convert-mkv-stream', (req, res) => {
       const scaleFilter = preset.scale ? ['-vf', `scale=-2:${preset.scale}`] : null;
       const pass1Args = [
         '-y', '-i', filePath,
-        '-map', '0:v',
+        '-map', '0:v:0',
         '-c:v', 'libx264', '-b:v', vBitrate,
         '-pass', '1', '-passlogfile', passLogFile,
         '-an', '-f', 'mp4', NULL_DEV
@@ -1326,7 +1652,7 @@ app.get('/api/local/convert-mkv-stream', (req, res) => {
 
       const pass2Args = [
         '-y', '-i', filePath,
-        '-map', '0:v', '-map', '0:a',
+        '-map', '0:v:0', '-map', '0:a:0?',
         '-c:v', 'libx264', '-b:v', vBitrate,
         '-pass', '2', '-passlogfile', passLogFile,
         '-c:a', 'aac', '-b:a', aBitrate,
@@ -1361,10 +1687,6 @@ app.get('/api/local/convert-mkv-stream', (req, res) => {
       req.on('close', () => killProcess(pass1));
       return;
     }
-
-    // Parse stderr for progress (copy mode)
-    attachProgress(ffmpegProcess, totalDuration, '');
-    req.on('close', () => killProcess(ffmpegProcess));
   });
 
   let completed = false;
@@ -1377,10 +1699,7 @@ app.get('/api/local/convert-mkv-stream', (req, res) => {
       send({ error: '转换失败: ' + err.message });
       res.end();
     } else {
-      // Only delete source for MKV→copy mode; keep original for transcodes
-      if (isCopy && isMkv) {
-        try { fs.unlinkSync(filePath); } catch {}
-      }
+      // Keep original MKV; user deletes manually if desired
       console.log('[convert] done:', mp4Path);
       send({ done: true, newPath: mp4Path });
       res.end();
@@ -1434,13 +1753,11 @@ app.post('/api/local/convert-mkv-upload', convertUpload.single('file'), multerEr
   console.log('[convert-mkv-upload] starting:', inputPath);
 
   try {
+    const aCodec = await probeFirstAudioCodec(inputPath);
+    const { args, audioMode } = buildFastRemuxArgs(inputPath, outputPath, aCodec);
+    console.log('[convert-mkv-upload] audio:', aCodec || '(none)', '->', audioMode);
     await new Promise((resolve, reject) => {
-      execFile('ffmpeg', [
-        '-y', '-i', inputPath,
-        '-map', '0:v', '-map', '0:a',
-        '-c', 'copy',
-        outputPath
-      ], (err, stdout, stderr) => {
+      execFile('ffmpeg', args, (err, stdout, stderr) => {
         if (err) {
           console.error('[convert-mkv-upload] ffmpeg error:', stderr?.slice(-500));
           reject(err);
