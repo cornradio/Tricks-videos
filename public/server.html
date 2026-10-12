@@ -2250,19 +2250,6 @@ function launchProtocolHref(href) {
   a.click();
   a.remove();
 }
-async function copyTextFallback(text) {
-  try {
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch {
-    try {
-      prompt('复制以下地址到 MPV / 播放器:', text);
-      return true;
-    } catch {
-      return false;
-    }
-  }
-}
 function openPlayerProtocol(player, streamUrl) {
   if (player === 'mpv') {
     // MPV plays HTTP URLs natively. Browser custom-protocol + "?query" often
@@ -2290,11 +2277,10 @@ async function openWithLocalPlayer(player) {
   $('#streamDropdown').classList.remove('show');
   const labels = { mpv: 'MPV', iina: 'IINA', vlc: 'VLC', potplayer: 'PotPlayer' };
   const label = labels[player] || player;
-  // Absolute HTTP(S) stream — MPV/VLC/etc can open this directly
   const streamUrl = location.origin + '/api/local/stream?path=' + encodeURIComponent(S.curFile.path);
   const onServerMachine = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
 
-  // Same machine as the files: just spawn the player on the local file (fastest)
+  // Same machine as the files: spawn player on the local file
   if (onServerMachine) {
     try {
       const r = await fetch('/api/local/open-player', {
@@ -2304,24 +2290,15 @@ async function openWithLocalPlayer(player) {
       });
       const d = await r.json().catch(() => ({}));
       if (r.ok) { toast('已用 ' + label + ' 打开'); return; }
-      toast(d.error || ('本机启动 ' + label + ' 失败，改用流地址…'));
+      toast(d.error || ('本机启动 ' + label + ' 失败'));
     } catch {
-      toast('本机启动 ' + label + ' 失败，改用流地址…');
+      toast('本机启动 ' + label + ' 失败');
     }
   }
 
-  // Remote (or spawn failed): give player the HTTP stream URL
-  const copied = await copyTextFallback(streamUrl);
+  // Remote (or spawn failed): only try protocol open — never auto-copy address
   openPlayerProtocol(player, streamUrl);
-  if (player === 'mpv') {
-    toast(copied
-      ? '已唤起 MPV，并复制了流地址（打不开就在终端：mpv 粘贴）'
-      : '已唤起 MPV（需 mpv-handler）；也可「复制地址」后用 mpv 打开');
-  } else {
-    toast(copied
-      ? ('正在唤起 ' + label + '，流地址已复制')
-      : ('正在唤起 ' + label));
-  }
+  toast('正在唤起 ' + label);
 }
 
 $('#streamMpvBtn').onclick = () => openWithLocalPlayer('mpv');
