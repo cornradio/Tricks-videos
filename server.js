@@ -372,12 +372,72 @@ app.delete('/api/tricks/:id', async (req, res) => {
 // ════════════════════════════
 //  Local Viewer API
 // ════════════════════════════
-const LOCAL_CLIPS_FILE = path.join(BASE, 'data', 'local-clips.json');
+const DATA_DIR = path.join(BASE, 'data');
+const LOCAL_CLIPS_FILE = path.join(DATA_DIR, 'local-clips.json');
+const LOCAL_NOTES_LEGACY = path.join(DATA_DIR, 'local-notes.json');
 const LOCAL_THUMB_DIR = path.join(UPLOADS, 'local-thumbs');
-for (const d of [LOCAL_THUMB_DIR]) { if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true }); }
+for (const d of [DATA_DIR, LOCAL_THUMB_DIR]) { if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true }); }
 
 function readLocalClips() { try { return JSON.parse(fs.readFileSync(LOCAL_CLIPS_FILE, 'utf-8')); } catch { return []; } }
 function writeLocalClips(d) { fs.writeFileSync(LOCAL_CLIPS_FILE, JSON.stringify(d, null, 2)); }
+
+/** Sidecar next to media: "foo.mp4" → "foo.mp4.notes.txt" (moves with the library). */
+function noteSidecarPath(filePath) {
+  return filePath + '.notes.txt';
+}
+function mediaHasNote(filePath) {
+  try {
+    const p = noteSidecarPath(filePath);
+    return fs.existsSync(p) && fs.statSync(p).size > 0;
+  } catch { return false; }
+}
+function readNoteText(filePath) {
+  const side = noteSidecarPath(filePath);
+  try {
+    if (fs.existsSync(side)) return fs.readFileSync(side, 'utf-8');
+  } catch {}
+  // One-shot fallback from old data/local-notes.json
+  try {
+    if (!fs.existsSync(LOCAL_NOTES_LEGACY)) return '';
+    const raw = JSON.parse(fs.readFileSync(LOCAL_NOTES_LEGACY, 'utf-8'));
+    const entry = raw && raw[filePath];
+    if (!entry) return '';
+    const text = typeof entry === 'string' ? entry : (entry.text || '');
+    if (text && pathIsAllowed(filePath)) {
+      try { fs.writeFileSync(side, text, 'utf-8'); } catch {}
+    }
+    return text || '';
+  } catch { return ''; }
+}
+function writeNoteText(filePath, text) {
+  const side = noteSidecarPath(filePath);
+  const trimmed = String(text || '');
+  if (!trimmed.trim()) {
+    try { if (fs.existsSync(side)) fs.unlinkSync(side); } catch {}
+    return null;
+  }
+  fs.writeFileSync(side, trimmed, 'utf-8');
+  return side;
+}
+function remapLocalNotesPath(oldPath, newPath) {
+  if (!oldPath || !newPath || oldPath === newPath) return;
+  const from = noteSidecarPath(oldPath);
+  const to = noteSidecarPath(newPath);
+  try {
+    if (fs.existsSync(from)) {
+      try { if (fs.existsSync(to)) fs.unlinkSync(to); } catch {}
+      fs.renameSync(from, to);
+    }
+  } catch (e) {
+    console.warn('[notes] remap failed:', e.message);
+  }
+}
+function deleteLocalNote(filePath) {
+  try {
+    const side = noteSidecarPath(filePath);
+    if (fs.existsSync(side)) fs.unlinkSync(side);
+  } catch {}
+}
 
 const VIDEO_EXTS = new Set(['.mp4', '.webm', '.mov', '.avi', '.mkv', '.wmv', '.flv', '.m4v']);
 const IMAGE_EXTS = new Set(['.jpg', '.jpeg', '.png', '.webp', '.bmp', '.svg', '.gif', '.avif', '.tiff', '.ico']);
@@ -409,9 +469,10 @@ app.get('/api/local/directory', (req, res) => {
           const fp = path.join(dir, e.name);
           let size = 0, birthtime = 0;
           try { const st = fs.statSync(fp); size = st.size; birthtime = st.birthtimeMs || st.mtimeMs; } catch {}
+          if (e.name.endsWith('.notes.txt')) continue;
           const mHash = require('crypto').createHash('md5').update(fp).digest('hex');
           const hasManualCover = fs.existsSync(path.join(LOCAL_THUMB_DIR, mHash + '.manual.jpg'));
-          videos.push({ name: e.name, path: fp, size, birthtime, hasManualCover, type: IMAGE_EXTS.has(ext) ? 'image' : 'video' });
+          videos.push({ name: e.name, path: fp, size, birthtime, hasManualCover, hasNote: mediaHasNote(fp), type: IMAGE_EXTS.has(ext) ? 'image' : 'video' });
         } else if (e.isFile() && SUBTITLE_EXTS.has(ext)) {
           subtitleFiles.push(e.name);
         } else if (e.isDirectory()) {
@@ -455,13 +516,14 @@ app.get('/api/local/scan-folder', (req, res) => {
     for (const e of entries) {
       if (e.name === '.TThumb.PNG') continue;
       const ext = path.extname(e.name).toLowerCase();
+      if (e.name.endsWith('.notes.txt')) continue;
       if (e.isFile() && (VIDEO_EXTS.has(ext) || IMAGE_EXTS.has(ext))) {
         const fp = path.join(dirPath, e.name);
         let size = 0, birthtime = 0;
         try { const st = fs.statSync(fp); size = st.size; birthtime = st.birthtimeMs || st.mtimeMs; } catch {}
         const mHash = require('crypto').createHash('md5').update(fp).digest('hex');
         const hasManualCover = fs.existsSync(path.join(LOCAL_THUMB_DIR, mHash + '.manual.jpg'));
-        videos.push({ name: e.name, path: fp, size, birthtime, hasManualCover, type: IMAGE_EXTS.has(ext) ? 'image' : 'video' });
+        videos.push({ name: e.name, path: fp, size, birthtime, hasManualCover, hasNote: mediaHasNote(fp), type: IMAGE_EXTS.has(ext) ? 'image' : 'video' });
       } else if (e.isFile() && SUBTITLE_EXTS.has(ext)) {
         subtitleFiles.push(e.name);
       } else if (e.isDirectory()) {
@@ -1127,6 +1189,52 @@ app.delete('/api/local/clips/:id', (req, res) => {
   writeLocalClips(db); res.json({ success: true });
 });
 
+// ── Per-video notes (sidecar "video.mp4.notes.txt" next to the file) ──
+app.get('/api/local/notes-flags', (req, res) => {
+  // Optional ?paths= encoded JSON array of media paths to check
+  let paths = [];
+  try {
+    if (req.query.paths) paths = JSON.parse(req.query.paths);
+  } catch {}
+  if (!Array.isArray(paths) || !paths.length) return res.json({});
+  const flags = {};
+  for (const p of paths) {
+    if (typeof p === 'string' && pathIsAllowed(p) && mediaHasNote(p)) flags[p] = true;
+  }
+  res.json(flags);
+});
+
+app.get('/api/local/notes', (req, res) => {
+  const filePath = req.query.path;
+  if (!filePath) return res.status(400).json({ error: '缺少路径' });
+  if (!pathIsAllowed(filePath)) return res.status(403).json({ error: '该路径不在白名单中' });
+  const text = readNoteText(filePath);
+  let updatedAt = null;
+  try {
+    const side = noteSidecarPath(filePath);
+    if (fs.existsSync(side)) updatedAt = fs.statSync(side).mtime.toISOString();
+  } catch {}
+  res.json({ path: filePath, text, updatedAt, sidecar: noteSidecarPath(filePath) });
+});
+
+app.put('/api/local/notes', (req, res) => {
+  const filePath = req.body?.path;
+  const text = req.body?.text != null ? String(req.body.text) : '';
+  if (!filePath) return res.status(400).json({ error: '缺少路径' });
+  if (!pathIsAllowed(filePath)) return res.status(403).json({ error: '该路径不在白名单中' });
+  try {
+    writeNoteText(filePath, text);
+    const trimmed = text.trim();
+    let updatedAt = null;
+    if (trimmed) {
+      try { updatedAt = fs.statSync(noteSidecarPath(filePath)).mtime.toISOString(); } catch {}
+    }
+    res.json({ success: true, path: filePath, text: trimmed ? text : '', updatedAt, sidecar: noteSidecarPath(filePath) });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get('/api/local/clips/:id/export', async (req, res) => {
   try {
     const db = readLocalClips();
@@ -1378,6 +1486,7 @@ app.delete('/api/local/file', async (req, res) => {
         fs.unlinkSync(filePath);
         if (!fs.existsSync(filePath)) {
           console.log('[delete] OK:', filePath);
+          deleteLocalNote(filePath);
           return res.json({ success: true });
         }
       } catch (e) {
@@ -1395,6 +1504,7 @@ app.delete('/api/local/file', async (req, res) => {
         await killStreams(filePath);
         fs.renameSync(filePath, tempPath);
         console.log('[delete] moved to temp:', tempPath);
+        deleteLocalNote(filePath);
         return res.json({ success: true, moved: true });
       } catch (e) {
         console.log('[delete] move failed:', e.message);
@@ -1402,6 +1512,7 @@ app.delete('/api/local/file', async (req, res) => {
       return res.status(500).json({ error: lastErr?.message || '文件删除失败 (仍被占用)' });
     }
     console.log('[delete] OK:', filePath);
+    deleteLocalNote(filePath);
     res.json({ success: true });
   } catch (err) {
     console.error('[delete] error:', filePath, '-', err.message);
@@ -1416,6 +1527,14 @@ app.patch('/api/local/file', (req, res) => {
     const dir = path.dirname(filePath);
     const newPath = path.join(dir, name);
     fs.renameSync(filePath, newPath);
+    remapLocalNotesPath(filePath, newPath);
+    // Keep clips attached to the renamed file
+    const clips = readLocalClips();
+    let changed = false;
+    for (const c of clips) {
+      if (c.videoPath === filePath) { c.videoPath = newPath; changed = true; }
+    }
+    if (changed) writeLocalClips(clips);
     res.json({ success: true, newPath });
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
@@ -1488,6 +1607,17 @@ app.patch('/api/local/move-files', async (req, res) => {
         errors.push({ path: fp, error: copyErr.message });
       }
     }
+  }
+  if (moved.length) {
+    const clips = readLocalClips();
+    let clipsChanged = false;
+    for (const m of moved) {
+      remapLocalNotesPath(m.oldPath, m.newPath);
+      for (const c of clips) {
+        if (c.videoPath === m.oldPath) { c.videoPath = m.newPath; clipsChanged = true; }
+      }
+    }
+    if (clipsChanged) writeLocalClips(clips);
   }
   console.log('[move-files] result:', { moved: moved.length, errors: errors.length });
   res.json({ success: true, moved, errors });

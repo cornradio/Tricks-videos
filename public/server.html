@@ -13,7 +13,7 @@
 <title>服务器浏览 - Tricks</title>
 <style>
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-:root{--bg:#0a0a0a;--card:#141414;--border:#222;--text:#e8e8e8;--text2:#777;--text3:#444;--accent:#ff5722;--accent-dim:rgba(255,87,34,.12);--green:#66bb6a;--red:#ef5350;--radius:10px;--speed:180ms}
+:root{--bg:#0a0a0a;--card:#141414;--border:#222;--text:#e8e8e8;--text2:#999;--text3:#777;--accent:#ff5722;--accent-dim:rgba(255,87,34,.12);--green:#66bb6a;--red:#ef5350;--radius:10px;--speed:180ms}
 html{scrollbar-color:#333 #0a0a0a}
 body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI',Roboto,sans-serif}
 .convert-widget{position:fixed;bottom:20px;right:20px;z-index:100;width:260px;background:var(--card);border:1px solid var(--border);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.6);padding:14px;display:none;backdrop-filter:blur(12px)}
@@ -67,8 +67,6 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;padding-bottom:24px}
 .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;cursor:pointer;transition:border-color var(--speed)}
 .card:hover{border-color:#333}
-.card:hover .card-reveal-btn{opacity:1}
-.card-reveal-btn:hover{background:rgba(0,0,0,.85)!important;color:var(--text)!important}
 .card-media{aspect-ratio:16/9;background:#000;display:flex;align-items:center;justify-content:center;color:#333;font-size:32px;position:relative;overflow:hidden}
 .card-media img{width:100%;height:100%;object-fit:cover;display:block}
 .card-media video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:none}
@@ -120,6 +118,30 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
 .ctrl-btn.ff-on{border-color:var(--accent);color:var(--accent);font-weight:700;font-size:13px}
 
 .ctrl-label{font-size:11px;color:var(--text3);margin-left:8px;white-space:nowrap;flex-shrink:0;font-family:ui-monospace,'Cascadia Code',Consolas,monospace;font-variant-numeric:tabular-nums;min-width:9.5em;text-align:right}
+.ctrl-btn.notes-on,.ctrl-btn.clips-on{border-color:var(--accent);color:var(--accent)}
+.ctrl-btn .ctrl-badge{position:absolute;top:-4px;right:-4px;min-width:14px;height:14px;padding:0 3px;border-radius:7px;background:var(--accent);color:#fff;font-size:9px;font-weight:700;line-height:14px;text-align:center}
+.ctrl-btn .ctrl-badge.dot{min-width:8px;width:8px;height:8px;padding:0;border-radius:50%;top:-2px;right:-2px;font-size:0;line-height:0;color:transparent}
+.ctrl-btn.rel{position:relative}
+.notes-tip{display:none;position:fixed;z-index:220;max-width:280px;padding:8px 10px;background:var(--card);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.55);font-size:12px;line-height:1.45;color:var(--text);white-space:pre-wrap;word-break:break-word;pointer-events:none}
+.notes-tip.show{display:block}
+.snap-modal{display:none;position:fixed;inset:0;z-index:200;background:#000;flex-direction:column;padding:0}
+.snap-modal.show{display:flex}
+.snap-modal-close{position:absolute;top:12px;right:14px;z-index:3;width:40px;height:40px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.2);border-radius:0;color:rgba(255,255,255,.75);font-size:26px;cursor:pointer;line-height:1;padding:0;display:flex;align-items:center;justify-content:center}
+.snap-modal-close:hover{color:#fff;border-color:rgba(255,255,255,.45);background:rgba(0,0,0,.65)}
+.snap-modal-box{flex:1;min-height:0;width:100%;display:flex;flex-direction:column;background:#000;border:none;border-radius:0;padding:0;box-shadow:none}
+.snap-modal-head{display:none}
+.clips-ab{display:inline-flex;gap:6px;align-items:center}
+.snap-preview-row{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;padding:8px 12px 0}
+.snap-preview-img-wrap{flex:1;min-width:0;min-height:0;height:100%;display:flex;align-items:center;justify-content:center;background:#000;border:none;border-radius:0;overflow:hidden}
+.snap-preview-img-wrap img{display:block;max-width:100%;max-height:100%;width:auto;height:auto;object-fit:contain}
+.snap-preview-footer{flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:10px;padding:12px 16px 18px;background:linear-gradient(to top,rgba(0,0,0,.92),rgba(0,0,0,.55))}
+.snap-preview-meta{font-size:11px;color:rgba(255,255,255,.55);font-family:ui-monospace,'Cascadia Code',Consolas,monospace;text-align:center}
+.snap-preview-actions{display:flex;flex-wrap:nowrap;gap:8px;align-items:center;justify-content:center}
+.snap-btn{flex-shrink:0;width:40px;height:40px;padding:0;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.22);border-radius:0;color:rgba(255,255,255,.9);font-size:13px;font-weight:600;line-height:1;font-family:inherit;cursor:pointer;transition:border-color .15s,color .15s,background .15s;user-select:none}
+.snap-btn.snap-arrow{font-size:22px;font-weight:400}
+.snap-btn:hover{border-color:var(--accent);color:var(--accent);background:rgba(255,87,34,.12)}
+.snap-btn:disabled{opacity:.35;cursor:default}
+.snap-btn svg{width:16px;height:16px;display:block}
 .detail-action-btn{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:transparent;color:var(--text2);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;padding:0}
 .detail-action-btn:hover{background:var(--hover);color:var(--text);border-color:var(--accent)}
 .detail-action-btn.danger:hover{color:var(--red);border-color:var(--red);background:rgba(239,83,80,.12)}
@@ -150,10 +172,32 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
 .douyin-speed-btn{position:absolute;right:16px;bottom:36px;z-index:6;min-width:44px;height:44px;padding:0 10px;border-radius:22px;border:1px solid rgba(255,255,255,.28);background:rgba(0,0,0,.45);color:rgba(255,255,255,.85);font-size:13px;font-weight:700;letter-spacing:.5px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;backdrop-filter:blur(6px);-webkit-tap-highlight-color:transparent;user-select:none}
 .douyin-speed-btn.active{color:var(--accent);border-color:var(--accent);background:rgba(255,87,34,.18)}
 .douyin-speed-btn:active{transform:scale(.96)}
-#douyinClose{position:absolute;top:10px;right:10px;z-index:10;width:36px;height:36px;border:none;border-radius:0;background:transparent;color:rgba(255,255,255,.35);font-size:26px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;text-shadow:0 1px 3px rgba(0,0,0,.5)}
+.douyin-shuffle-btn{position:absolute;right:72px;bottom:36px;z-index:11;width:44px;height:44px;padding:0;border-radius:22px;border:1px solid rgba(255,255,255,.28);background:rgba(0,0,0,.45);color:rgba(255,255,255,.85);cursor:pointer;display:none;align-items:center;justify-content:center;font-family:inherit;backdrop-filter:blur(6px);-webkit-tap-highlight-color:transparent;user-select:none;transition:opacity .25s,color .15s,border-color .15s,background .15s}
+#douyinOverlay.show .douyin-shuffle-btn{display:flex}
+.douyin-shuffle-btn.active{color:var(--accent);border-color:var(--accent);background:rgba(255,87,34,.18)}
+.douyin-shuffle-btn:active{transform:scale(.96)}
+.douyin-shuffle-btn svg{width:18px;height:18px;display:block}
+.shuffle-toggle{display:inline-flex;align-items:center;justify-content:center;min-width:36px;padding:6px 10px}
+.shuffle-toggle svg{width:15px;height:15px;display:block}
+.shuffle-toggle.active{color:var(--accent);border-color:var(--accent);background:var(--accent-dim)}
+#douyinClose{position:absolute;top:10px;right:10px;z-index:10;width:36px;height:36px;border:none;border-radius:0;background:transparent;color:rgba(255,255,255,.35);font-size:26px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;text-shadow:0 1px 3px rgba(0,0,0,.5);transition:opacity .25s}
 #douyinClose:hover{color:rgba(255,255,255,.7);background:transparent}
 #douyinHint{position:absolute;top:18px;left:50%;transform:translateX(-50%);z-index:10;font-size:12px;color:rgba(255,255,255,.55);pointer-events:none;opacity:0;transition:opacity .35s ease}
-.clips-section{border-top:1px solid var(--border);padding-top:16px;margin-top:8px}
+#douyinOverlay.ui-hidden #douyinClose,#douyinOverlay.ui-hidden #douyinHint,#douyinOverlay.ui-hidden .douyin-shuffle-btn{opacity:0;pointer-events:none}
+.douyin-slide-meta,.douyin-speed-btn{transition:opacity .25s}
+.douyin-slide.ui-hidden .douyin-slide-meta,.douyin-slide.ui-hidden .douyin-speed-btn{opacity:0;pointer-events:none}
+.notes-section{display:none;border-top:1px solid var(--border);padding-top:14px;margin-top:8px;margin-bottom:4px}
+.notes-section.show{display:block}
+.notes-head{font-size:14px;font-weight:600;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;gap:10px}
+.notes-status{font-size:12px;font-weight:500;color:var(--text2)}
+.notes-status.saving{color:var(--accent)}
+.notes-status.saved{color:var(--green)}
+#videoNotes{width:100%;min-height:100px;resize:vertical;padding:10px 12px;background:var(--bg);border:1px solid var(--border);border-radius:8px;color:var(--text);font-size:13px;font-family:inherit;line-height:1.5;outline:none}
+#videoNotes:focus{border-color:var(--accent)}
+#videoNotes::placeholder{color:var(--text3)}
+.card-note-flag{font-size:11px;color:var(--accent);margin-top:4px}
+.clips-section{display:none;border-top:1px solid var(--border);padding-top:16px;margin-top:8px}
+.clips-section.show{display:block}
 .clips-head{font-size:14px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
 .clip-list{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
 .clip-item{display:inline-flex;align-items:center;gap:4px;padding:5px 12px;background:var(--bg);border:1px solid var(--border);border-radius:20px;cursor:pointer;transition:all var(--speed);font-size:12px;white-space:nowrap}
@@ -189,25 +233,39 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
 .detail-drag-icon:active{cursor:grabbing}
 .detail-drag-icon.dragging{opacity:.4}
 
+.stream-menu-wrap{display:inline-flex;align-items:center;gap:6px}
 .stream-menu{position:relative;display:inline-block}
-.stream-menu .stream-dropdown{display:none;position:absolute;top:100%;right:0;margin-top:4px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:4px 0;min-width:180px;box-shadow:0 8px 24px rgba(0,0,0,.5);z-index:20}
+.stream-menu .stream-dropdown{display:none;position:absolute;top:100%;left:0;margin-top:4px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:4px 0;min-width:220px;box-shadow:0 8px 24px rgba(0,0,0,.5);z-index:20}
 .stream-menu .stream-dropdown.show{display:block}
 .stream-menu .stream-item{display:block;width:100%;padding:8px 16px;background:none;border:none;color:var(--text);font-size:12px;font-family:inherit;text-align:left;cursor:pointer;white-space:nowrap;transition:background .15s}
 .stream-menu .stream-item:hover{background:rgba(255,255,255,.06)}
 .stream-menu .stream-player-row{display:flex;align-items:stretch;gap:0}
 .stream-menu .stream-player-row .stream-item{flex:1;min-width:0}
-.stream-menu .stream-dl{flex-shrink:0;display:flex;align-items:center;padding:0 10px;font-size:11px;color:var(--text3);text-decoration:none;border-left:1px solid var(--border);transition:color .15s,background .15s}
-.stream-menu .stream-dl:hover{color:var(--accent);background:rgba(255,255,255,.06)}
+.stream-menu .stream-dl,.stream-menu .stream-pin{flex-shrink:0;display:flex;align-items:center;justify-content:center;padding:0 10px;font-size:11px;color:var(--text3);text-decoration:none;border:none;border-left:1px solid var(--border);background:none;cursor:pointer;font-family:inherit;transition:color .15s,background .15s;white-space:nowrap}
+.stream-menu .stream-dl:hover,.stream-menu .stream-pin:hover{color:var(--accent);background:rgba(255,255,255,.06)}
+.stream-menu .stream-pin.active{color:var(--accent)}
+#streamPinnedBtn{display:none;flex-shrink:0}
+#streamPinnedBtn.show{display:inline-flex;align-items:center}
 
 .help-btn{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
 .help-btn:hover{background:var(--hover);color:var(--text);border-color:var(--accent)}
-.help-panel{display:none;position:fixed;top:52px;right:20px;z-index:60;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 0;min-width:200px;box-shadow:0 8px 24px rgba(0,0,0,.5)}
+.help-panel{display:none;position:fixed;top:52px;right:20px;z-index:60;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:12px 0;min-width:240px;max-width:320px;box-shadow:0 8px 24px rgba(0,0,0,.5)}
 .help-panel.show{display:block}
 .help-section{padding:4px 0;border-bottom:1px solid var(--border)}
 .help-section:last-child{border-bottom:none}
 .help-title{font-size:11px;color:var(--accent);font-weight:600;padding:4px 16px 2px;text-transform:uppercase;letter-spacing:.5px}
-.help-panel a{display:block;padding:5px 16px;font-size:13px;color:var(--text);text-decoration:none;transition:background .1s}
+.help-panel a{display:block;padding:8px 16px;font-size:13px;color:var(--text);text-decoration:none;transition:background .1s}
 .help-panel a:hover{background:var(--hover)}
+.help-action-btn{display:block;width:calc(100% - 32px);margin:6px 16px 8px;padding:8px 12px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px;font-family:inherit;cursor:pointer;text-align:left;transition:all .15s}
+.help-action-btn:hover{border-color:var(--accent);color:var(--accent)}
+.shortcuts-modal{display:none;position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.55);align-items:center;justify-content:center;padding:20px}
+.shortcuts-modal.show{display:flex}
+.shortcuts-modal-box{background:var(--card);border:1px solid var(--border);border-radius:12px;width:min(420px,100%);max-height:min(80vh,560px);overflow:hidden;display:flex;flex-direction:column;box-shadow:0 16px 48px rgba(0,0,0,.55)}
+.shortcuts-modal-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border)}
+.shortcuts-modal-head span{font-size:15px;font-weight:600;color:var(--text)}
+.shortcuts-modal-close{background:none;border:none;color:var(--text2);font-size:22px;cursor:pointer;line-height:1;padding:0 4px}
+.shortcuts-modal-close:hover{color:var(--text)}
+.shortcuts-modal-body{padding:10px 8px 16px;overflow-y:auto}
 
 .history-btn{width:28px;height:28px;border-radius:50%;border:1px solid var(--border);background:transparent;color:var(--text2);font-size:14px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
 .history-btn:hover{background:var(--hover);color:var(--text);border-color:var(--accent)}
@@ -229,31 +287,31 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
 .history-panel.show{transform:translateX(0)}
 .history-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)}
 .history-head span{font-size:14px;color:var(--text);font-weight:600}
-.history-clear{background:none;border:none;color:var(--text3);font-size:12px;cursor:pointer;font-family:inherit;padding:4px 10px;border-radius:4px;transition:all .15s}
+.history-clear{background:none;border:none;color:var(--text);font-size:14px;cursor:pointer;font-family:inherit;padding:6px 12px;border-radius:4px;transition:all .15s}
 .history-clear:hover{color:var(--accent);background:var(--accent-dim)}
 .history-grid{display:flex;flex-direction:column;gap:10px}
 .history-group{border:1px solid var(--border);border-radius:8px;overflow:hidden;background:rgba(255,255,255,.02)}
-.history-group-head{display:flex;align-items:center;gap:8px;padding:8px 10px;cursor:pointer;background:rgba(255,255,255,.04);user-select:none}
+.history-group-head{display:flex;align-items:center;gap:8px;padding:10px 12px;cursor:pointer;background:rgba(255,255,255,.04);user-select:none}
 .history-group-head:hover{background:rgba(255,255,255,.06)}
-.history-group-name{flex:1;font-size:12px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.history-group-count{font-size:10px;color:var(--text3);background:var(--bg);padding:1px 6px;border-radius:10px}
-.history-group-toggle{font-size:10px;color:var(--text3);transition:transform .15s}
+.history-group-name{flex:1;font-size:13px;font-weight:600;color:var(--text);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.history-group-count{font-size:13px;color:var(--text);background:var(--bg);padding:2px 8px;border-radius:10px;font-weight:600;min-width:1.5em;text-align:center}
+.history-group-toggle{font-size:12px;color:var(--text2);transition:transform .15s}
 .history-group.collapsed .history-group-toggle{transform:rotate(-90deg)}
 .history-group.collapsed .history-group-body{display:none}
-.history-group-del{background:none;border:none;color:var(--text3);font-size:14px;line-height:1;cursor:pointer;padding:0 4px;border-radius:4px;font-family:inherit}
+.history-group-del{background:none;border:none;color:var(--text2);font-size:20px;line-height:1;cursor:pointer;padding:4px 10px;border-radius:4px;font-family:inherit;min-width:36px;min-height:36px}
 .history-group-del:hover{color:var(--red);background:rgba(255,80,80,.12)}
 .history-group-body{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:10px}
 .history-card{cursor:pointer;border-radius:8px;overflow:hidden;border:1px solid var(--border);transition:border-color .15s;background:var(--card)}
 .history-card:hover{border-color:#666}
 .history-card-media{aspect-ratio:16/9;background:#0a0a0a;position:relative;overflow:hidden}
 .history-card-media img{width:100%;height:100%;object-fit:cover;display:block}
-.history-card-name{font-size:12px;padding:6px 8px 2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
-.history-card-time{font-size:10px;color:var(--text3);padding:0 8px 6px}
-.history-empty{text-align:center;padding:40px 10px;color:var(--text3);font-size:13px}
+.history-card-name{font-size:13px;padding:6px 8px 2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text)}
+.history-card-time{font-size:12px;color:var(--text2);padding:0 8px 8px}
+.history-empty{text-align:center;padding:40px 10px;color:var(--text2);font-size:14px}
 .exclude-list{display:flex;flex-direction:column;gap:6px;max-height:160px;overflow-y:auto;margin-top:6px}
-.exclude-item{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:11px;color:var(--text2);background:var(--bg);padding:5px 8px;border-radius:4px}
+.exclude-item{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:13px;color:var(--text);background:var(--bg);padding:8px 10px;border-radius:4px}
 .exclude-item span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.exclude-item button{background:none;border:1px solid var(--border);color:var(--text2);border-radius:4px;padding:2px 8px;font-size:10px;cursor:pointer}
+.exclude-item button{background:none;border:1px solid var(--border);color:var(--text);border-radius:4px;padding:4px 10px;font-size:12px;cursor:pointer}
 .exclude-item button:hover{color:var(--accent);border-color:var(--accent)}
 
 .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--card);border:1px solid var(--border);border-radius:8px;padding:10px 20px;font-size:13px;z-index:200;opacity:0;transition:all .3s;pointer-events:none}
@@ -278,7 +336,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
 
 /* ── Hamburger & Overlay ── */
 .hamburger{display:none;background:none;border:none;color:var(--text);font-size:20px;cursor:pointer;padding:4px 10px 4px 0;line-height:1}
-.sidebar-overlay{display:none}
+.sidebar-overlay{display:none;pointer-events:none}
 
 /* ── Mobile More Menu ── */
 .mobile-more-btn{display:none;background:none;border:none;color:var(--text2);font-size:20px;cursor:pointer;padding:4px 8px;line-height:1}
@@ -310,17 +368,21 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
 .mobile-sort-wrap{gap:6px;flex-wrap:wrap;padding:4px 0}
 .mobile-sort-wrap .sort-seg{border:1px solid var(--border);border-radius:4px;background:var(--bg);font-size:13px;padding:6px 10px}
 
-/* ── Responsive ── */
-@media(max-width:768px){
+/* ── Responsive: phone + iPad portrait (drawer sidebar) ── */
+@media(max-width:768px),(max-width:1180px) and (orientation:portrait){
   .hamburger{display:block}
   .mobile-more-btn{display:block}
-  .header .github-btn,.header .upload-icon-btn,.header .help-btn{display:none}
+  .header .upload-icon-btn,.header .help-btn{display:none}
   .header .douyin-btn{display:flex}
   .header h1{font-size:15px}
-  .layout{grid-template-columns:1fr}
-  .sidebar{position:fixed;top:52px;left:-260px;width:260px;z-index:40;height:calc(100vh - 52px);transition:left var(--speed)}
+  .layout{grid-template-columns:1fr !important}
+  .layout.collapsed{grid-template-columns:1fr !important}
+  .sidebar{position:fixed !important;top:52px;left:-280px;width:280px;z-index:80;height:calc(100vh - 52px);transition:left var(--speed);min-width:0 !important;padding:12px 0;border-right:1px solid var(--border);overflow-y:auto;background:var(--card)}
   .sidebar.open{left:0}
-  .sidebar-overlay{position:fixed;top:52px;left:0;right:0;bottom:0;background:rgba(0,0,0,.6);z-index:39;cursor:pointer}
+  .layout.collapsed .sidebar{width:280px;padding:12px 0;overflow-y:auto;border-right:1px solid var(--border)}
+  .sidebar-overlay{position:fixed;top:52px;left:0;right:0;bottom:0;background:rgba(0,0,0,.55);z-index:70;cursor:pointer;pointer-events:auto}
+  .sidebar-overlay.show{display:block}
+  .sidebar-toggle{display:none !important}
   .main{padding:16px 12px 0}
   .grid{grid-template-columns:repeat(2,1fr);gap:8px}
   .card{border-radius:8px}
@@ -420,7 +482,6 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
   <button class="douyin-btn" id="douyinBtn" title="抖音模式（上下滑动）"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="2" width="12" height="20" rx="2"/><path d="M12 6v4"/><path d="M9 18h6"/></svg></button>
   <button class="upload-icon-btn" id="uploadBtn" title="上传视频"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg></button>
   <input type="file" id="uploadInput" multiple accept="video/*" style="display:none">
-  <a href="https://github.com/cornradio/Video-Library-Browser" target="_blank" class="github-btn" title="GitHub"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/></svg></a>
   <button class="history-btn" id="historyBtn" title="播放历史"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></button>
   <button class="fullscreen-btn" id="fullscreenBtn" title="网页全屏"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"/><polyline points="9 21 3 21 3 15"/><line x1="21" y1="3" x2="14" y2="10"/><line x1="3" y1="21" x2="10" y2="14"/></svg></button>
   <div class="history-panel" id="historyPanel">
@@ -430,30 +491,8 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
     </div>
     <div class="history-grid" id="historyGrid"></div>
   </div>
-  <button class="help-btn" id="helpBtn" title="快捷键">?</button>
+  <button class="help-btn" id="helpBtn" title="设置与帮助">?</button>
   <div class="help-panel" id="helpPanel">
-    <div class="help-section">
-      <div class="help-title">快捷键</div>
-      <div class="help-shortcuts">
-        <div class="help-shortcut"><kbd>↑</kbd><span>上一个视频</span></div>
-        <div class="help-shortcut"><kbd>↓</kbd><span>下一个视频</span></div>
-        <div class="help-shortcut"><kbd>空格</kbd><span>播放 / 暂停</span></div>
-        <div class="help-shortcut"><kbd>←</kbd><span>后退 5 秒</span></div>
-        <div class="help-shortcut"><kbd>→</kbd><span>前进 5 秒</span></div>
-        <div class="help-shortcut"><kbd>S</kbd><span>截图下载</span></div>
-        <div class="help-shortcut"><kbd>D</kbd><span>下载视频</span></div>
-        <div class="help-shortcut"><kbd>F</kbd><span>全屏播放</span></div>
-        <div class="help-shortcut"><kbd>P</kbd><span>切换控件显示</span></div>
-        <div class="help-shortcut"><kbd>R</kbd><span>重命名文件</span></div>
-        <div class="help-shortcut"><kbd>Ctrl+R</kbd><span>刷新列表</span></div>
-        <div class="help-shortcut"><kbd>Z</kbd><span>收藏/取消收藏</span></div>
-        <div class="help-shortcut"><kbd>Del</kbd><span>删除文件</span></div>
-        <div class="help-shortcut"><kbd>A</kbd><span>标记起点 (片段面板开启时)</span></div>
-        <div class="help-shortcut"><kbd>B</kbd><span>标记终点 (片段面板开启时)</span></div>
-        <div class="help-shortcut"><kbd>Esc</kbd><span>返回列表</span></div>
-        <div class="help-shortcut"><kbd>F4</kbd><span>转换视频 (任意视频)</span></div>
-      </div>
-    </div>
     <div class="help-section">
       <div class="help-title">设置</div>
       <div class="help-shortcuts">
@@ -472,6 +511,14 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
         </div>
       </div>
     </div>
+    <div class="help-section">
+      <div class="help-title">快捷键</div>
+      <button type="button" class="help-action-btn" id="showShortcutsBtn">查看全部快捷键…</button>
+    </div>
+    <div class="help-section">
+      <div class="help-title">GitHub</div>
+      <a href="https://github.com/cornradio/Video-Library-Browser" target="_blank" rel="noopener noreferrer">Video-Library-Browser ↗</a>
+    </div>
   </div>
   <button class="mobile-more-btn" id="mobileMoreBtn">&#8942;</button>
   <div class="mobile-more-menu" id="mobileMoreMenu">
@@ -483,10 +530,38 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
       <span class="sort-seg" data-sort="time_asc">旧</span>
       <span class="sort-seg" data-sort="recent">最近</span>
     </div>
-    <a href="https://github.com/cornradio/Video-Library-Browser" target="_blank">GitHub</a>
     <button id="mobileDouyinBtn">抖音模式</button>
     <button id="mobileUploadBtn">上传视频</button>
-    <button id="mobileHelpBtn">资源导航</button>
+    <button id="mobileHelpBtn">设置与帮助</button>
+  </div>
+</div>
+
+<div class="shortcuts-modal" id="shortcutsModal">
+  <div class="shortcuts-modal-box" id="shortcutsModalBox">
+    <div class="shortcuts-modal-head">
+      <span>快捷键</span>
+      <button type="button" class="shortcuts-modal-close" id="shortcutsModalClose" aria-label="关闭">×</button>
+    </div>
+    <div class="shortcuts-modal-body help-shortcuts">
+      <div class="help-shortcut"><kbd>↑</kbd><span>上一个视频</span></div>
+      <div class="help-shortcut"><kbd>↓</kbd><span>下一个视频</span></div>
+      <div class="help-shortcut"><kbd>空格</kbd><span>播放 / 暂停</span></div>
+      <div class="help-shortcut"><kbd>←</kbd><span>后退 5 秒</span></div>
+      <div class="help-shortcut"><kbd>→</kbd><span>前进 5 秒</span></div>
+      <div class="help-shortcut"><kbd>S</kbd><span>截图预览</span></div>
+      <div class="help-shortcut"><kbd>D</kbd><span>下载视频</span></div>
+      <div class="help-shortcut"><kbd>F</kbd><span>全屏播放</span></div>
+      <div class="help-shortcut"><kbd>P</kbd><span>切换控件显示</span></div>
+      <div class="help-shortcut"><kbd>R</kbd><span>重命名文件</span></div>
+      <div class="help-shortcut"><kbd>Ctrl+R</kbd><span>刷新列表</span></div>
+      <div class="help-shortcut"><kbd>Z</kbd><span>收藏/取消收藏</span></div>
+      <div class="help-shortcut"><kbd>Del</kbd><span>删除文件</span></div>
+      <div class="help-shortcut"><kbd>A</kbd><span>标记起点 (片段面板开启时)</span></div>
+      <div class="help-shortcut"><kbd>B</kbd><span>标记终点 (片段面板开启时)</span></div>
+      <div class="help-shortcut"><kbd>Esc</kbd><span>返回列表</span></div>
+      <div class="help-shortcut"><kbd>F4</kbd><span>转换视频</span></div>
+      <div class="help-shortcut"><kbd>长按卡片</kbd><span>打开右键菜单（触控）</span></div>
+    </div>
   </div>
 </div>
 
@@ -540,32 +615,41 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
     <div id="detailView" style="display:none">
       <div class="detail-topbar">
         <button class="btn btn-ghost btn-sm" id="backBtn">&larr; 返回</button>
-        <div class="stream-menu" id="streamMenu">
-          <button class="btn btn-ghost btn-sm" id="streamMenuBtn">流式播放 ▾</button>
-          <div class="stream-dropdown" id="streamDropdown">
-            <button class="stream-item" id="streamCopyBtn">复制地址</button>
-            <button class="stream-item" id="streamOpenBtn">打开地址</button>
-            <div class="stream-player-row">
-              <button class="stream-item" id="streamMpvBtn">MPV 打开</button>
-              <a class="stream-dl" href="https://mpv.io/" target="_blank" rel="noopener noreferrer" title="MPV 官网" onclick="event.stopPropagation()">下载</a>
-            </div>
-            <div class="stream-player-row">
-              <button class="stream-item" id="streamIinaBtn">IINA 打开</button>
-              <a class="stream-dl" href="https://iina.io/" target="_blank" rel="noopener noreferrer" title="IINA 官网" onclick="event.stopPropagation()">下载</a>
-            </div>
-            <div class="stream-player-row">
-              <button class="stream-item" id="streamVlcBtn">VLC 打开</button>
-              <a class="stream-dl" href="https://www.videolan.org/vlc/" target="_blank" rel="noopener noreferrer" title="VLC 官网" onclick="event.stopPropagation()">下载</a>
-            </div>
-            <div class="stream-player-row">
-              <button class="stream-item" id="streamPotBtn">PotPlayer 打开</button>
-              <a class="stream-dl" href="https://github.com/crucialize/potplayer" target="_blank" rel="noopener noreferrer" title="PotPlayer 下载" onclick="event.stopPropagation()">下载</a>
+        <div class="stream-menu-wrap">
+          <div class="stream-menu" id="streamMenu">
+            <button class="btn btn-ghost btn-sm" id="streamMenuBtn">流式播放 ▾</button>
+            <div class="stream-dropdown" id="streamDropdown">
+              <button class="stream-item" id="streamCopyBtn">复制地址</button>
+              <button class="stream-item" id="streamOpenBtn">打开地址</button>
+              <div class="stream-player-row">
+                <button class="stream-item" id="streamMpvBtn">MPV 打开</button>
+                <a class="stream-dl" href="https://github.com/akiirui/mpv-handler/releases" target="_blank" rel="noopener noreferrer" title="安装 mpv-handler（远程唤起 MPV 需要）" onclick="event.stopPropagation()">协议</a>
+                <a class="stream-dl" href="https://mpv.io/" target="_blank" rel="noopener noreferrer" title="MPV 官网" onclick="event.stopPropagation()">下载</a>
+                <button type="button" class="stream-pin" data-player="mpv" title="钉到顶栏快捷按钮">钉住</button>
+              </div>
+              <div class="stream-player-row">
+                <button class="stream-item" id="streamIinaBtn">IINA 打开</button>
+                <a class="stream-dl" href="https://iina.io/" target="_blank" rel="noopener noreferrer" title="IINA 官网" onclick="event.stopPropagation()">下载</a>
+                <button type="button" class="stream-pin" data-player="iina" title="钉到顶栏快捷按钮">钉住</button>
+              </div>
+              <div class="stream-player-row">
+                <button class="stream-item" id="streamVlcBtn">VLC 打开</button>
+                <a class="stream-dl" href="https://www.videolan.org/vlc/" target="_blank" rel="noopener noreferrer" title="VLC 官网" onclick="event.stopPropagation()">下载</a>
+                <button type="button" class="stream-pin" data-player="vlc" title="钉到顶栏快捷按钮">钉住</button>
+              </div>
+              <div class="stream-player-row">
+                <button class="stream-item" id="streamPotBtn">PotPlayer 打开</button>
+                <a class="stream-dl" href="https://github.com/crucialize/potplayer" target="_blank" rel="noopener noreferrer" title="PotPlayer 下载" onclick="event.stopPropagation()">下载</a>
+                <button type="button" class="stream-pin" data-player="potplayer" title="钉到顶栏快捷按钮">钉住</button>
+              </div>
             </div>
           </div>
         </div>
+        <button type="button" class="btn btn-ghost btn-sm" id="streamPinnedBtn" title=""></button>
         <button class="detail-action-btn danger" id="detailDeleteBtn" title="删除 (Del)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button>
         <div class="spacer"></div>
         <span id="navInfo" style="font-size:11px;color:var(--text3)"></span>
+        <button type="button" class="btn btn-ghost btn-sm shuffle-toggle" id="shuffleBtn" title="Shuffle：开启后「下一个」随机，「上一个」可回退" aria-label="Shuffle" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg></button>
         <button class="btn btn-ghost btn-sm" id="prevBtn" title="上一个 (↑)">上一个</button>
         <button class="btn btn-ghost btn-sm" id="nextBtn" title="下一个 (↓)">下一个</button>
       </div>
@@ -588,6 +672,8 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
       </div>
       <div id="speedIndicator" style="display:none;position:fixed;bottom:60px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.88);color:var(--accent);font-size:13px;font-weight:700;padding:6px 18px;border-radius:20px;border:1px solid var(--accent);letter-spacing:1px;white-space:nowrap;z-index:999;pointer-events:none">2x 倍速</div>
       <div class="detail-name" id="detailName" style="display:flex;align-items:center"><span class="detail-drag-icon" id="detailDragIcon" title="拖拽到左侧文件夹以移动"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 1h5l3 3v9a1 1 0 01-1 1H4a1 1 0 01-1-1V2a1 1 0 011-1z"/><path d="M9 1v3h3"/></svg></span><span id="detailNameText" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+        <button type="button" class="ctrl-btn rel" id="notesBtn" title="备注" aria-label="备注"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg><span class="ctrl-badge dot" id="notesBadge" style="display:none"></span></button>
+        <button type="button" class="ctrl-btn rel" id="clipsToggleBtn" title="片段标记" aria-label="片段标记"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg><span class="ctrl-badge" id="clipsBadge" style="display:none">0</span></button>
         <button class="ctrl-btn" id="snapshotBtn" title="截图 (S)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></button>
         <button class="ctrl-btn" id="detailDownloadBtn" title="下载 (D)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
         <span style="width:12px;flex-shrink:0" aria-hidden="true"></span>
@@ -597,10 +683,24 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
         <span class="ctrl-label" id="playTimeLabel">0:00 / 0:00</span>
       </div>
       <div id="detailTags" style="padding:0 24px 8px;display:flex;gap:6px;flex-wrap:wrap"></div>
-      <div class="clips-section">
+      <div class="notes-section" id="notesSection">
+        <div class="notes-head">
+          <span>备注</span>
+          <span class="notes-status" id="notesStatus"></span>
+        </div>
+        <textarea id="videoNotes" placeholder="给这个视频写点备注…" spellcheck="false"></textarea>
+      </div>
+      <div class="clips-section" id="clipsSection">
         <div class="clips-head">
           <span>片段标记</span>
-          <div style="display:flex;gap:8px;align-items:center">
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <div class="clips-ab">
+              <button type="button" class="ctrl-btn" id="markStartBtn" title="标记起点 (A)">A</button>
+              <button type="button" class="ctrl-btn" id="markEndBtn" title="标记终点 (B)">B</button>
+            </div>
+            <span class="trim-val" id="markStartVal" title="滚轮微调起点">--</span>
+            <span style="font-size:12px;color:var(--text3)">→</span>
+            <span class="trim-val" id="markEndVal" title="滚轮微调终点">--</span>
             <button class="clip-stop" id="stopClipBtn" style="display:none">停止循环</button>
             <button class="btn btn-ghost btn-sm" id="toggleClipAdd">+ 标记片段</button>
           </div>
@@ -609,10 +709,6 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
         <div class="clip-add" id="clipAddPanel" style="display:none">
           <div id="clipEditTitle" style="display:none;font-size:13px;color:var(--accent);margin-bottom:8px;font-weight:600">编辑片段</div>
           <div class="clip-add-row">
-            <button class="btn btn-ghost btn-sm" id="markStartBtn">起点 (A)</button>
-            <span class="trim-val" id="markStartVal">--</span>
-            <button class="btn btn-ghost btn-sm" id="markEndBtn">终点 (B)</button>
-            <span class="trim-val" id="markEndVal">--</span>
             <button class="btn btn-ghost btn-sm" id="previewClipBtn">预览</button>
           </div>
           <div class="field" style="margin-top:10px;margin-bottom:10px">
@@ -623,6 +719,25 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
             <button class="btn btn-ghost btn-sm" id="cancelEditBtn" style="display:none">取消</button>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="notes-tip" id="notesTip"></div>
+<div class="snap-modal" id="snapPreview" role="dialog" aria-modal="true" aria-label="截图预览">
+  <div class="snap-modal-box" id="snapModalBox">
+    <button type="button" class="snap-modal-close" id="snapCloseBtn" title="关闭 (Esc)" aria-label="关闭">×</button>
+    <div class="snap-preview-row">
+      <div class="snap-preview-img-wrap"><img id="snapPreviewImg" alt="截图预览"></div>
+    </div>
+    <div class="snap-preview-footer">
+      <div class="snap-preview-meta" id="snapPreviewMeta"></div>
+      <div class="snap-preview-actions">
+        <button type="button" class="snap-btn snap-arrow" id="snapPrevFrameBtn" title="上一帧 (←)" aria-label="上一帧">‹</button>
+        <button type="button" class="snap-btn" id="snapCopyBtn" title="复制图片" aria-label="复制"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/></svg></button>
+        <button type="button" class="snap-btn" id="snapDownloadBtn" title="下载图片" aria-label="下载"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg></button>
+        <button type="button" class="snap-btn snap-arrow" id="snapNextFrameBtn" title="下一帧 (→)" aria-label="下一帧">›</button>
       </div>
     </div>
   </div>
@@ -659,6 +774,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
 <div id="douyinOverlay">
   <button id="douyinClose" title="退出">&times;</button>
   <div id="douyinHint">上下滑动切换</div>
+  <button type="button" class="douyin-shuffle-btn" id="douyinShuffleBtn" title="Shuffle" aria-label="Shuffle" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg></button>
   <div id="douyinFeed"></div>
 </div>
 
@@ -704,6 +820,7 @@ function folderId(f) { return f.path; }
 // ── Help panel ──
 $('#helpBtn').onclick = (e) => {
   e.stopPropagation();
+  $('#historyPanel')?.classList.remove('show');
   $('#helpPanel').classList.toggle('show');
 };
 document.addEventListener('click', (e) => {
@@ -711,6 +828,19 @@ document.addEventListener('click', (e) => {
     $('#helpPanel').classList.remove('show');
   }
 });
+$('#showShortcutsBtn')?.addEventListener('click', (e) => {
+  e.stopPropagation();
+  $('#helpPanel').classList.remove('show');
+  $('#shortcutsModal')?.classList.add('show');
+});
+function closeShortcutsModal() {
+  $('#shortcutsModal')?.classList.remove('show');
+}
+$('#shortcutsModalClose')?.addEventListener('click', closeShortcutsModal);
+$('#shortcutsModal')?.addEventListener('click', (e) => {
+  if (e.target === $('#shortcutsModal')) closeShortcutsModal();
+});
+$('#shortcutsModalBox')?.addEventListener('click', (e) => e.stopPropagation());
 
 // ── Mode dropdown ──
 $('#modeTrigger').onclick = (e) => {
@@ -1203,6 +1333,7 @@ function buildTreeNode(folder) {
     S.selPath = id;
     showVideosForFolder(id);
     renderTree();
+    closeSidebar();
     // Auto-refresh folder contents in background
     await refreshCurrentFolder(false);
   };
@@ -1440,21 +1571,14 @@ function populateCard(card, f) {
       <div class="card-thumb-fail" style="display:none">&#9655;</div>
       ${isImage ? '' : '<video muted loop preload="none" playsinline></video>'}
       <span style="position:absolute;top:6px;right:6px;padding:2px 6px;border-radius:3px;font-size:10px;font-weight:700;background:rgba(0,0,0,.7);color:var(--text2)">${badge}</span>
-      <button class="card-reveal-btn" title="在资源管理器中查看" style="position:absolute;top:4px;left:4px;background:rgba(0,0,0,.6);border:none;color:var(--text2);border-radius:4px;padding:3px 6px;font-size:13px;cursor:pointer;line-height:1;opacity:0;transition:opacity .15s">&#128193;</button>
     </div>
     <div class="card-info">
       <div class="card-name" title="${f.name}">${f.name}</div>
       <div class="card-meta">${f.size ? `<span>${formatSize(f.size)}</span>` : ''}</div>
       ${tagsHtml}
+      <div class="card-note-flag" data-path="${fid}" style="display:${f.hasNote ? '' : 'none'}">有备注</div>
       ${isImage ? '' : `<div class="card-clip-count" data-path="${fid}"></div>`}
     </div>`;
-
-  // Reveal in Explorer button
-  const revealBtn = card.querySelector('.card-reveal-btn');
-  revealBtn.onclick = (e) => {
-    e.stopPropagation();
-    fetch(`/api/local/reveal?path=${encodeURIComponent(f.path)}`);
-  };
 
   card.querySelectorAll('.card-tag').forEach((el, i) => {
     el.onclick = (e) => {
@@ -1485,7 +1609,9 @@ function populateCard(card, f) {
 
   if (!isImage) setupHover(card, f);
   setupCardDrag(card, f);
+  let longPressFired = false;
   card.onclick = (e) => {
+    if (longPressFired) { longPressFired = false; e.preventDefault(); e.stopPropagation(); return; }
     if (e.ctrlKey || e.metaKey) {
       e.preventDefault();
       const url = new URL(location.href);
@@ -1496,6 +1622,31 @@ function populateCard(card, f) {
     }
   };
   card.oncontextmenu = e => { e.preventDefault(); showCardCtxMenu(e.clientX, e.clientY, f); };
+  // iPad / touch: long-press opens the same context menu (convert / rename / …)
+  let lpTimer = null, lpX = 0, lpY = 0;
+  card.addEventListener('touchstart', (e) => {
+    if (e.touches.length !== 1) return;
+    const t = e.touches[0];
+    lpX = t.clientX; lpY = t.clientY;
+    longPressFired = false;
+    clearTimeout(lpTimer);
+    lpTimer = setTimeout(() => {
+      lpTimer = null;
+      longPressFired = true;
+      showCardCtxMenu(lpX, lpY, f);
+      if (navigator.vibrate) try { navigator.vibrate(25); } catch {}
+    }, 480);
+  }, { passive: true });
+  card.addEventListener('touchmove', (e) => {
+    if (!lpTimer || !e.touches[0]) return;
+    const t = e.touches[0];
+    if (Math.abs(t.clientX - lpX) > 12 || Math.abs(t.clientY - lpY) > 12) {
+      clearTimeout(lpTimer); lpTimer = null;
+    }
+  }, { passive: true });
+  const clearLp = () => { clearTimeout(lpTimer); lpTimer = null; };
+  card.addEventListener('touchend', clearLp);
+  card.addEventListener('touchcancel', clearLp);
 }
 
 // ── Search ──
@@ -1739,6 +1890,7 @@ function openDetail(file, noPush) {
   S.curFile = file;
   S.playingClipId = null;
   stopPreview();
+  if (typeof closeSnapPreview === 'function') closeSnapPreview();
   S.navIdx = S.navFiles.findIndex(f => f.path === file.path);
   document.title = file.name + ' - Tricks';
 
@@ -1965,26 +2117,35 @@ function openDetail(file, noPush) {
       }
     };
   });
-  // Clips: video only
+  closeNotesPanel();
+  loadVideoNotes(file.path);
+  // Clips: video only; panel stays collapsed by default
+  const clipsSection = $('#clipsSection');
+  const clipsToggle = $('#clipsToggleBtn');
   if (!isImage) {
     $('#clipAddPanel').style.display = 'none';
     resetClipForm();
+    if (clipsSection) clipsSection.classList.remove('show');
+    if (clipsToggle) {
+      clipsToggle.style.display = '';
+      clipsToggle.classList.remove('clips-on');
+    }
     loadClips();
-    const clipsSection = document.querySelector('.clips-section');
-    if (clipsSection) clipsSection.style.display = '';
   } else {
     $('#clipAddPanel').style.display = 'none';
-    const clipsSection = document.querySelector('.clips-section');
-    if (clipsSection) clipsSection.style.display = 'none';
+    if (clipsSection) clipsSection.classList.remove('show');
+    if (clipsToggle) clipsToggle.style.display = 'none';
+    updateClipsBadge(0);
   }
 }
 
 function updateNavButtons() {
   const total = S.navFiles.length;
   const idx = S.navIdx;
-  $('#prevBtn').disabled = total <= 1;
+  $('#prevBtn').disabled = total <= 1 && !(_navShuffle && _detailNavHist.length);
   $('#nextBtn').disabled = total <= 1;
   $('#navInfo').textContent = total > 1 ? `${idx + 1} / ${total}` : '';
+  syncShuffleToggles();
 }
 
 function showList() {
@@ -1992,9 +2153,12 @@ function showList() {
   v.pause(); v.src = ''; v.controls = true; v.style.display = 'none';
   const detailImg = $('#detailImage');
   if (detailImg) { detailImg.src = ''; detailImg.style.display = 'none'; }
-  const clipsSection = document.querySelector('.clips-section');
-  if (clipsSection) clipsSection.style.display = '';
+  const clipsSection = $('#clipsSection');
+  if (clipsSection) clipsSection.classList.remove('show');
+  $('#clipsToggleBtn')?.classList.remove('clips-on');
   stopPreview();
+  if (typeof closeSnapPreview === 'function') closeSnapPreview();
+  if (typeof closeNotesPanel === 'function') closeNotesPanel();
   S.playingClipId = null;
   S.curFile = null;
   document.title = '服务器浏览 - Tricks';
@@ -2073,20 +2237,12 @@ $('#streamOpenBtn').onclick = () => {
   $('#streamDropdown').classList.remove('show');
 };
 
-function openPlayerProtocol(player, streamUrl) {
-  let href = '';
-  if (player === 'mpv') {
-    // mpv-handler: https://github.com/akiirui/mpv-handler
-    const b64 = btoa(unescape(encodeURIComponent(streamUrl)))
-      .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
-    href = 'mpv://play/' + b64;
-  } else if (player === 'iina') {
-    href = 'iina://weblink?url=' + encodeURIComponent(streamUrl);
-  } else if (player === 'vlc') {
-    href = 'vlc://' + streamUrl;
-  } else if (player === 'potplayer') {
-    href = 'potplayer://' + streamUrl;
-  } else return;
+function launchProtocolHref(href) {
+  // location.assign is more reliable for custom protocols on Windows than <a>.click()
+  try {
+    window.location.assign(href);
+    return;
+  } catch {}
   const a = document.createElement('a');
   a.href = href;
   a.style.display = 'none';
@@ -2094,15 +2250,51 @@ function openPlayerProtocol(player, streamUrl) {
   a.click();
   a.remove();
 }
+async function copyTextFallback(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    try {
+      prompt('复制以下地址到 MPV / 播放器:', text);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}
+function openPlayerProtocol(player, streamUrl) {
+  if (player === 'mpv') {
+    // MPV plays HTTP URLs natively. Browser custom-protocol + "?query" often
+    // gets truncated, so hand the full URL via mpv-handler's base64 payload.
+    const b64 = btoa(unescape(encodeURIComponent(streamUrl)))
+      .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '');
+    launchProtocolHref('mpv-handler://play/' + b64);
+    return;
+  }
+  if (player === 'iina') {
+    launchProtocolHref('iina://weblink?url=' + encodeURIComponent(streamUrl));
+    return;
+  }
+  if (player === 'vlc') {
+    launchProtocolHref('vlc://' + streamUrl);
+    return;
+  }
+  if (player === 'potplayer') {
+    launchProtocolHref('potplayer://' + streamUrl);
+  }
+}
 
 async function openWithLocalPlayer(player) {
   if (!S.curFile) return;
   $('#streamDropdown').classList.remove('show');
   const labels = { mpv: 'MPV', iina: 'IINA', vlc: 'VLC', potplayer: 'PotPlayer' };
   const label = labels[player] || player;
+  // Absolute HTTP(S) stream — MPV/VLC/etc can open this directly
   const streamUrl = location.origin + '/api/local/stream?path=' + encodeURIComponent(S.curFile.path);
   const onServerMachine = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
 
+  // Same machine as the files: just spawn the player on the local file (fastest)
   if (onServerMachine) {
     try {
       const r = await fetch('/api/local/open-player', {
@@ -2112,26 +2304,80 @@ async function openWithLocalPlayer(player) {
       });
       const d = await r.json().catch(() => ({}));
       if (r.ok) { toast('已用 ' + label + ' 打开'); return; }
-      toast(d.error || ('服务器启动 ' + label + ' 失败，尝试本机协议…'));
+      toast(d.error || ('本机启动 ' + label + ' 失败，改用流地址…'));
     } catch {
-      toast('服务器启动 ' + label + ' 失败，尝试本机协议…');
+      toast('本机启动 ' + label + ' 失败，改用流地址…');
     }
   }
 
+  // Remote (or spawn failed): give player the HTTP stream URL
+  const copied = await copyTextFallback(streamUrl);
   openPlayerProtocol(player, streamUrl);
-  const hints = {
-    mpv: '（需 mpv-handler）',
-    iina: '（需已安装 IINA）',
-    vlc: '（需系统已注册 vlc://）',
-    potplayer: '（需系统已注册 potplayer://）'
-  };
-  toast(onServerMachine ? ('已尝试唤起本机 ' + label) : ('正在唤起本机 ' + label + (hints[player] || '')));
+  if (player === 'mpv') {
+    toast(copied
+      ? '已唤起 MPV，并复制了流地址（打不开就在终端：mpv 粘贴）'
+      : '已唤起 MPV（需 mpv-handler）；也可「复制地址」后用 mpv 打开');
+  } else {
+    toast(copied
+      ? ('正在唤起 ' + label + '，流地址已复制')
+      : ('正在唤起 ' + label));
+  }
 }
 
 $('#streamMpvBtn').onclick = () => openWithLocalPlayer('mpv');
 $('#streamIinaBtn').onclick = () => openWithLocalPlayer('iina');
 $('#streamVlcBtn').onclick = () => openWithLocalPlayer('vlc');
 $('#streamPotBtn').onclick = () => openWithLocalPlayer('potplayer');
+
+const STREAM_PIN_KEY = 'stream_pinned_player';
+const STREAM_PLAYER_LABELS = { mpv: 'MPV', iina: 'IINA', vlc: 'VLC', potplayer: 'PotPlayer' };
+function getPinnedStreamPlayer() {
+  const p = localStorage.getItem(STREAM_PIN_KEY) || '';
+  return STREAM_PLAYER_LABELS[p] ? p : '';
+}
+function updatePinnedStreamUI() {
+  const p = getPinnedStreamPlayer();
+  const quick = $('#streamPinnedBtn');
+  if (quick) {
+    if (p) {
+      const name = STREAM_PLAYER_LABELS[p];
+      quick.classList.add('show');
+      quick.textContent = '用 ' + name + ' 打开';
+      quick.title = '用 ' + name + ' 流式打开当前视频';
+    } else {
+      quick.classList.remove('show');
+      quick.textContent = '';
+      quick.title = '';
+    }
+  }
+  document.querySelectorAll('.stream-pin').forEach(el => {
+    const on = el.dataset.player === p;
+    el.textContent = on ? '取消' : '钉住';
+    el.classList.toggle('active', on);
+    el.title = on ? '取消钉住（去掉顶栏快捷按钮）' : '钉住：在「流式播放」右侧显示快捷打开按钮';
+  });
+}
+document.querySelectorAll('.stream-pin').forEach(el => {
+  el.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const player = el.dataset.player;
+    if (!STREAM_PLAYER_LABELS[player]) return;
+    if (getPinnedStreamPlayer() === player) {
+      localStorage.removeItem(STREAM_PIN_KEY);
+      toast('已取消钉住');
+    } else {
+      localStorage.setItem(STREAM_PIN_KEY, player);
+      toast('已钉住 ' + STREAM_PLAYER_LABELS[player] + '：顶栏会出现快捷按钮');
+    }
+    updatePinnedStreamUI();
+    $('#streamDropdown')?.classList.remove('show');
+  });
+});
+$('#streamPinnedBtn')?.addEventListener('click', () => {
+  const p = getPinnedStreamPlayer();
+  if (p) openWithLocalPlayer(p);
+});
+updatePinnedStreamUI();
 
 $('#detailDownloadBtn').onclick = () => {
   if (!S.curFile) return;
@@ -2144,16 +2390,213 @@ $('#detailDownloadBtn').onclick = () => {
 };
 $('#detailDeleteBtn').onclick = () => deleteCurrentVideo();
 
+let _navShuffle = localStorage.getItem('nav_shuffle_mode') === '1'
+  || localStorage.getItem('douyin_random_mode') === '1';
+let _detailNavHist = [];
+let _douyinHist = [];
+function syncShuffleToggles() {
+  const on = !!_navShuffle;
+  const detailBtn = $('#shuffleBtn');
+  if (detailBtn) {
+    detailBtn.classList.toggle('active', on);
+    detailBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    detailBtn.title = on
+      ? 'Shuffle 开：下一个随机，上一个可回到刚才的视频'
+      : 'Shuffle 关：点击开启';
+  }
+  const dyBtn = $('#douyinShuffleBtn');
+  if (dyBtn) {
+    dyBtn.classList.toggle('active', on);
+    dyBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    dyBtn.title = on
+      ? 'Shuffle 开：下滑随机，上滑可回到刚才的视频'
+      : 'Shuffle 关：点击开启';
+  }
+}
+function setNavShuffle(on, toastMsg) {
+  _navShuffle = !!on;
+  localStorage.setItem('nav_shuffle_mode', _navShuffle ? '1' : '0');
+  localStorage.removeItem('douyin_random_mode');
+  if (!_navShuffle) {
+    _detailNavHist = [];
+    _douyinHist = [];
+  }
+  syncShuffleToggles();
+  if (toastMsg) toast(toastMsg);
+}
+function pickRandomNavVideo(excludePath) {
+  const vids = S.navFiles.filter(f => f.type !== 'image');
+  if (!vids.length) return null;
+  let pick = vids[Math.floor(Math.random() * vids.length)];
+  if (vids.length > 1 && excludePath) {
+    let guard = 0;
+    while (pick.path === excludePath && guard++ < 12) {
+      pick = vids[Math.floor(Math.random() * vids.length)];
+    }
+  }
+  return pick;
+}
 $('#prevBtn').onclick = () => {
+  if (_navShuffle && _detailNavHist.length) {
+    const path = _detailNavHist.pop();
+    const file = S.navFiles.find(f => f.path === path)
+      || (S.tree && findVideoInTree(S.tree, path));
+    if (file) { openDetail(file); return; }
+  }
   if (S.navFiles.length <= 1) return;
   S.navIdx = (S.navIdx - 1 + S.navFiles.length) % S.navFiles.length;
   openDetail(S.navFiles[S.navIdx]);
 };
 $('#nextBtn').onclick = () => {
+  if (_navShuffle) {
+    const pick = pickRandomNavVideo(S.curFile && S.curFile.path);
+    if (!pick) return toast('当前没有可随机的视频');
+    if (S.curFile) _detailNavHist.push(S.curFile.path);
+    if (_detailNavHist.length > 80) _detailNavHist.shift();
+    openDetail(pick);
+    return;
+  }
   if (S.navFiles.length <= 1) return;
   S.navIdx = (S.navIdx + 1) % S.navFiles.length;
   openDetail(S.navFiles[S.navIdx]);
 };
+$('#shuffleBtn')?.addEventListener('click', () => {
+  const next = !_navShuffle;
+  setNavShuffle(next, next ? 'Shuffle 已开' : 'Shuffle 已关');
+});
+syncShuffleToggles();
+
+// ── Video notes (sidecar JSON on server) ──
+let _notesSaveTimer = null;
+let _notesPath = null;
+let _notesDirty = false;
+let _notesTextCache = '';
+function setNotesStatus(text, cls) {
+  const el = $('#notesStatus');
+  if (!el) return;
+  el.textContent = text || '';
+  el.className = 'notes-status' + (cls ? ' ' + cls : '');
+}
+function syncNotesBtn() {
+  const btn = $('#notesBtn');
+  const badge = $('#notesBadge');
+  if (!btn) return;
+  const has = !!(_notesTextCache || '').trim();
+  const open = !!$('#notesSection')?.classList.contains('show');
+  btn.classList.toggle('notes-on', open);
+  if (badge) badge.style.display = has ? '' : 'none';
+  btn.title = has ? '备注（悬停预览）' : '备注';
+}
+function hideNotesTip() {
+  $('#notesTip')?.classList.remove('show');
+}
+function showNotesTipNearBtn() {
+  const tip = $('#notesTip');
+  const btn = $('#notesBtn');
+  const text = (_notesTextCache || '').trim();
+  if (!tip || !btn || !text) return;
+  if ($('#notesSection')?.classList.contains('show')) return;
+  tip.textContent = text.length > 280 ? text.slice(0, 280) + '…' : text;
+  const r = btn.getBoundingClientRect();
+  tip.classList.add('show');
+  const tw = tip.offsetWidth || 200;
+  const th = tip.offsetHeight || 40;
+  let left = r.left + r.width / 2 - tw / 2;
+  left = Math.max(8, Math.min(left, window.innerWidth - tw - 8));
+  let top = r.top - th - 8;
+  if (top < 8) top = r.bottom + 8;
+  tip.style.left = left + 'px';
+  tip.style.top = top + 'px';
+}
+function setNotesPanelOpen(open) {
+  const section = $('#notesSection');
+  if (!section) return;
+  section.classList.toggle('show', !!open);
+  hideNotesTip();
+  syncNotesBtn();
+  if (open) {
+    section.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    setTimeout(() => $('#videoNotes')?.focus(), 30);
+  } else {
+    saveVideoNotes(true);
+  }
+}
+function openNotesPanel() { setNotesPanelOpen(true); }
+function closeNotesPanel() { setNotesPanelOpen(false); }
+async function loadVideoNotes(filePath) {
+  _notesPath = filePath;
+  _notesDirty = false;
+  _notesTextCache = '';
+  clearTimeout(_notesSaveTimer);
+  const ta = $('#videoNotes');
+  if (!ta) return;
+  ta.value = '';
+  syncNotesBtn();
+  setNotesStatus('加载中…');
+  try {
+    const r = await fetch('/api/local/notes?path=' + encodeURIComponent(filePath));
+    const d = await r.json();
+    if (_notesPath !== filePath) return;
+    ta.value = d.text || '';
+    _notesTextCache = ta.value;
+    setNotesStatus(d.text ? '已保存' : '', d.text ? 'saved' : '');
+    syncNotesBtn();
+  } catch {
+    if (_notesPath === filePath) setNotesStatus('加载失败');
+  }
+}
+async function saveVideoNotes(immediate) {
+  const filePath = _notesPath;
+  const ta = $('#videoNotes');
+  if (!filePath || !ta || !_notesDirty) return;
+  const text = ta.value;
+  const doSave = async () => {
+    if (_notesPath !== filePath) return;
+    setNotesStatus('保存中…', 'saving');
+    try {
+      const r = await fetch('/api/local/notes', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ path: filePath, text })
+      });
+      if (!r.ok) throw new Error('save failed');
+      if (_notesPath === filePath && ta.value === text) {
+        _notesDirty = false;
+        _notesTextCache = text;
+        setNotesStatus(text.trim() ? '已保存' : '', text.trim() ? 'saved' : '');
+        syncNotesBtn();
+        const has = !!text.trim();
+        document.querySelectorAll('.card-note-flag').forEach(el => {
+          if (el.dataset.path === filePath) el.style.display = has ? '' : 'none';
+        });
+        const vnode = findVideoInTree(S.tree, filePath);
+        if (vnode) vnode.hasNote = has;
+      }
+    } catch {
+      if (_notesPath === filePath) setNotesStatus('保存失败');
+    }
+  };
+  clearTimeout(_notesSaveTimer);
+  if (immediate) await doSave();
+  else _notesSaveTimer = setTimeout(doSave, 600);
+}
+$('#videoNotes')?.addEventListener('input', () => {
+  _notesDirty = true;
+  _notesTextCache = $('#videoNotes').value;
+  syncNotesBtn();
+  setNotesStatus('未保存', 'saving');
+  saveVideoNotes(false);
+});
+$('#videoNotes')?.addEventListener('blur', () => saveVideoNotes(true));
+$('#notesBtn')?.addEventListener('click', (e) => {
+  e.stopPropagation();
+  const open = !$('#notesSection')?.classList.contains('show');
+  setNotesPanelOpen(open);
+});
+$('#notesBtn')?.addEventListener('mouseenter', () => {
+  if ((_notesTextCache || '').trim()) showNotesTipNearBtn();
+});
+$('#notesBtn')?.addEventListener('mouseleave', () => hideNotesTip());
 
 // ── Clip Storage (server API) ──
 async function loadClips() {
@@ -2182,9 +2625,31 @@ function loadClipCounts() {
 }
 
 // ── Clips ──
+function updateClipsBadge(n) {
+  const badge = $('#clipsBadge');
+  if (!badge) return;
+  if (n > 0) {
+    badge.style.display = '';
+    badge.textContent = n > 99 ? '99+' : String(n);
+  } else {
+    badge.style.display = 'none';
+    badge.textContent = '0';
+  }
+}
+function setClipsPanelOpen(open) {
+  const section = $('#clipsSection');
+  const btn = $('#clipsToggleBtn');
+  if (!section) return;
+  section.classList.toggle('show', !!open);
+  btn?.classList.toggle('clips-on', !!open);
+}
+function ensureClipsPanelOpen() {
+  setClipsPanelOpen(true);
+}
 function renderClips() {
   const list = $('#clipList');
   $('#stopClipBtn').style.display = S.playingClipId ? '' : 'none';
+  updateClipsBadge(S.clips.length);
   if (!S.clips.length) {
     list.innerHTML = '<div style="font-size:13px;color:var(--text3);padding:8px 0">暂无片段</div>';
     return;
@@ -2199,6 +2664,14 @@ function renderClips() {
     list.appendChild(item);
   }
 }
+$('#clipsToggleBtn')?.addEventListener('click', (e) => {
+  e.stopPropagation();
+  const open = !$('#clipsSection')?.classList.contains('show');
+  setClipsPanelOpen(open);
+  if (open) {
+    $('#clipsSection')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+});
 
 function playClip(clip) {
   stopPreview();
@@ -2524,6 +2997,7 @@ function resetClipForm() {
 }
 
 function openEditClip(clip) {
+  ensureClipsPanelOpen();
   $('#clipAddPanel').style.display = 'block';
   editingClipId = clip.id;
   markS = clip.startTime; markE = clip.endTime;
@@ -2536,8 +3010,31 @@ function openEditClip(clip) {
 }
 $('#cancelEditBtn').onclick = () => resetClipForm();
 
-$('#markStartBtn').onclick = () => { markS = parseFloat($('#video').currentTime.toFixed(2)); $('#markStartVal').textContent = markS.toFixed(2) + 's'; };
-$('#markEndBtn').onclick = () => { markE = parseFloat($('#video').currentTime.toFixed(2)); $('#markEndVal').textContent = markE.toFixed(2) + 's'; };
+function markClipPoint(which) {
+  const v = $('#video');
+  if (!v || !v.src) return toast('视频尚未就绪');
+  const t = parseFloat((v.currentTime || 0).toFixed(2));
+  ensureClipsPanelOpen();
+  const panel = $('#clipAddPanel');
+  // Reveal save form once both ends (or either) are being marked
+  if (panel && panel.style.display === 'none') {
+    panel.style.display = 'block';
+    if (!editingClipId) {
+      $('#clipEditTitle').style.display = 'none';
+      $('#cancelEditBtn').style.display = 'none';
+      $('#saveClipBtn').textContent = '保存片段';
+    }
+  }
+  if (which === 'S') {
+    markS = t;
+    $('#markStartVal').textContent = markS.toFixed(2) + 's';
+  } else {
+    markE = t;
+    $('#markEndVal').textContent = markE.toFixed(2) + 's';
+  }
+}
+$('#markStartBtn').onclick = () => markClipPoint('S');
+$('#markEndBtn').onclick = () => markClipPoint('E');
 
 // Wheel scroll to adjust A/B point times
 (function() {
@@ -2744,6 +3241,15 @@ document.addEventListener('fullscreenchange', () => {
 });
 
 document.addEventListener('keydown', e => {
+  // Allow Esc to close popups even from textarea
+  if (e.key === 'Escape') {
+    if (isSnapModalOpen()) { e.preventDefault(); closeSnapPreview(); return; }
+    if ($('#notesSection')?.classList.contains('show')) {
+      e.preventDefault();
+      closeNotesPanel();
+      return;
+    }
+  }
   if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
   // Card context menu shortcuts (while menu is open)
   if ($('#cardCtxMenu')?.classList.contains('show') && !e.ctrlKey && !e.metaKey && !e.altKey) {
@@ -2757,6 +3263,12 @@ document.addEventListener('keydown', e => {
     e.preventDefault();
     refreshCurrentFolder(true);
     return;
+  }
+  // Snapshot modal: ← → step frames
+  if (isSnapModalOpen()) {
+    if (e.key === 'ArrowLeft') { e.preventDefault(); stepSnapFrame(-1); return; }
+    if (e.key === 'ArrowRight') { e.preventDefault(); stepSnapFrame(1); return; }
+    if (e.key === ' ') { e.preventDefault(); return; }
   }
   // Detail view navigation
   if ($('#detailView').style.display !== 'none') {
@@ -2774,11 +3286,8 @@ document.addEventListener('keydown', e => {
     if (e.key === ' ') { e.preventDefault(); if ($('#video').src) $('#playPauseBtn').click(); }
     if (e.key === 's' || e.key === 'S') { e.preventDefault(); if ($('#video').src) $('#snapshotBtn').click(); }
     if (e.key === 'd' || e.key === 'D') { e.preventDefault(); if (S.curFile) $('#detailDownloadBtn').click(); }
-  }
-  // Clip marking shortcuts (only when clip panel is open)
-  if ($('#clipAddPanel').style.display !== 'none') {
-    if (e.key === 'a' || e.key === 'A') $('#markStartBtn').click();
-    if (e.key === 'b' || e.key === 'B') $('#markEndBtn').click();
+    if ((e.key === 'a' || e.key === 'A') && !e.ctrlKey && !e.metaKey) { e.preventDefault(); $('#markStartBtn').click(); }
+    if ((e.key === 'b' || e.key === 'B') && !e.ctrlKey && !e.metaKey) { e.preventDefault(); $('#markEndBtn').click(); }
   }
 });
 
@@ -3248,16 +3757,20 @@ function setupTreeDrop(row, folderPath) {
   });
 }
 
-// ── Mobile Sidebar Toggle ──
+// ── Mobile / iPad Sidebar Toggle ──
 function closeSidebar() {
-  $('#sidebar').classList.remove('open');
-  $('#sidebarOverlay').style.display = 'none';
+  $('#sidebar')?.classList.remove('open');
+  const ov = $('#sidebarOverlay');
+  if (ov) { ov.classList.remove('show'); ov.style.display = 'none'; }
 }
 $('#hamburgerBtn').onclick = () => {
   const sb = $('#sidebar');
+  const ov = $('#sidebarOverlay');
+  if (!sb || !ov) return;
   const opening = !sb.classList.contains('open');
-  sb.classList.toggle('open');
-  $('#sidebarOverlay').style.display = opening ? 'block' : 'none';
+  sb.classList.toggle('open', opening);
+  ov.classList.toggle('show', opening);
+  ov.style.display = opening ? 'block' : 'none';
 };
 $('#sidebarOverlay').onclick = closeSidebar;
 
@@ -3348,7 +3861,7 @@ function renderExcludeList() {
   const list = $('#excludeList');
   if (!list) return;
   if (!historyExcludes.length) {
-    list.innerHTML = '<div style="font-size:11px;color:var(--text3)">暂无排除项</div>';
+    list.innerHTML = '<div style="font-size:13px;color:var(--text2)">暂无排除项</div>';
     return;
   }
   list.innerHTML = historyExcludes.map(p => `
@@ -3475,7 +3988,6 @@ function renderHistory() {
     btn.onclick = (e) => {
       e.stopPropagation();
       const folder = btn.dataset.folder;
-      if (!confirm(`删除「${folderNameFromPath(folder)}」的播放记录？`)) return;
       deleteHistoryFolder(folder);
       toast('已删除该文件夹的播放记录');
     };
@@ -3527,10 +4039,10 @@ document.addEventListener('click', (e) => {
 $('#historyPanel').onclick = (e) => e.stopPropagation();
 
 $('#historyClearBtn').onclick = () => {
-  if (!confirm('清空所有播放历史？')) return;
   localStorage.removeItem(HISTORY_KEY);
   fetch('/api/play-history', { method: 'DELETE' }).catch(() => {});
   renderHistory();
+  toast('已清空播放历史');
 };
 
 // ══════════════════════════════════════════════════════
@@ -3761,36 +4273,234 @@ function updateSortLabel() {
   }).catch(() => {});
 })();
 
-// ── Detail Controls ──
-$('#snapshotBtn').onclick = () => {
+// ── Detail Controls / Snapshot preview ──
+let _snapBlob = null;
+let _snapPngBlob = null;
+let _snapUrl = null;
+let _snapName = '';
+let _snapCanvas = null;
+let _snapTime = 0;
+let _snapStepping = false;
+let _snapStepQueue = 0;
+function formatSnapTime(t) {
+  const s = Math.max(0, t || 0);
+  const m = Math.floor(s / 60);
+  const rem = s - m * 60;
+  return m + ':' + rem.toFixed(2).padStart(5, '0');
+}
+/** Exactly one frame at 30fps timeline (≈33.3ms). No larger jumps. */
+function snapFrameStep() {
+  return 1 / 30;
+}
+function revokeSnapUrl() {
+  if (_snapUrl) {
+    try { URL.revokeObjectURL(_snapUrl); } catch {}
+    _snapUrl = null;
+  }
+}
+function isSnapModalOpen() {
+  return !!$('#snapPreview')?.classList.contains('show');
+}
+function closeSnapPreview() {
+  _snapStepping = false;
+  _snapStepQueue = 0;
+  const panel = $('#snapPreview');
+  if (panel) panel.classList.remove('show');
+  revokeSnapUrl();
+  _snapBlob = null;
+  _snapPngBlob = null;
+  _snapCanvas = null;
+  _snapName = '';
+  _snapTime = 0;
+  const img = $('#snapPreviewImg');
+  if (img) img.removeAttribute('src');
+  const meta = $('#snapPreviewMeta');
+  if (meta) meta.textContent = '';
+}
+function canvasToBlob(canvas, type, quality) {
+  return new Promise((resolve, reject) => {
+    try {
+      canvas.toBlob(blob => {
+        if (!blob) reject(new Error('toBlob failed'));
+        else resolve(blob);
+      }, type, quality);
+    } catch (e) { reject(e); }
+  });
+}
+function captureCurrentFrameToPreview() {
   const v = $('#video');
-  if (!v || !v.src || v.readyState < 2) return toast('视频尚未就绪');
+  if (!v || !v.src || v.readyState < 2) {
+    toast('视频尚未就绪');
+    return false;
+  }
   try {
-    const canvas = document.createElement('canvas');
-    canvas.width = v.videoWidth || 1280;
-    canvas.height = v.videoHeight || 720;
-    if (!canvas.width || !canvas.height) return toast('无法获取画面尺寸');
-    const ctx = canvas.getContext('2d');
-    ctx.drawImage(v, 0, 0, canvas.width, canvas.height);
+    const w = v.videoWidth || 1280;
+    const h = v.videoHeight || 720;
+    if (!w || !h) {
+      toast('无法获取画面尺寸');
+      return false;
+    }
+    if (!_snapCanvas) _snapCanvas = document.createElement('canvas');
+    const canvas = _snapCanvas;
+    if (canvas.width !== w || canvas.height !== h) {
+      canvas.width = w;
+      canvas.height = h;
+    }
+    canvas.getContext('2d').drawImage(v, 0, 0, w, h);
     const base = (S.curFile && S.curFile.name ? S.curFile.name.replace(/\.[^.]+$/, '') : 'snapshot');
-    const t = Math.floor(v.currentTime || 0);
-    const name = `${base}_${t}s.jpg`;
+    _snapTime = v.currentTime || 0;
+    const t = _snapTime;
+    _snapName = `${base}_${t.toFixed(2).replace('.', 's')}s.jpg`;
+    const img = $('#snapPreviewImg');
+    if (img) img.src = canvas.toDataURL('image/jpeg', 0.88);
+    const meta = $('#snapPreviewMeta');
+    if (meta) meta.textContent = `${w}×${h} · ${formatSnapTime(t)} · ${_snapName}`;
+    $('#snapPreview')?.classList.add('show');
+    _snapPngBlob = null;
     canvas.toBlob(blob => {
-      if (!blob) return toast('截图失败');
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = name;
-      document.body.appendChild(a);
-      a.click();
-      a.remove();
-      setTimeout(() => URL.revokeObjectURL(url), 2000);
-      toast('截图已下载');
+      if (!blob || canvas !== _snapCanvas) return;
+      revokeSnapUrl();
+      _snapBlob = blob;
+      _snapUrl = URL.createObjectURL(blob);
     }, 'image/jpeg', 0.92);
+    return true;
   } catch (e) {
     toast('截图失败: ' + (e.message || e));
+    return false;
   }
+}
+function seekVideoTo(v, t) {
+  return new Promise((resolve) => {
+    const target = t;
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      v.removeEventListener('seeked', onSeeked);
+      clearTimeout(timer);
+      resolve();
+    };
+    const onSeeked = () => finish();
+    v.addEventListener('seeked', onSeeked);
+    try {
+      v.currentTime = target;
+    } catch {
+      finish();
+      return;
+    }
+    // If already on that frame, seeked may not fire
+    if (Math.abs((v.currentTime || 0) - target) < 1e-4 && !v.seeking) {
+      finish();
+      return;
+    }
+    const timer = setTimeout(finish, 400);
+  });
+}
+async function stepSnapFrame(dir) {
+  const v = $('#video');
+  if (!v || !v.src || !isSnapModalOpen()) return;
+  // Queue extra presses — each still moves exactly one frame (never a bigger jump)
+  if (_snapStepping) {
+    _snapStepQueue = Math.max(-12, Math.min(12, _snapStepQueue + (dir >= 0 ? 1 : -1)));
+    return;
+  }
+  _snapStepping = true;
+  try {
+    try { v.pause(); } catch {}
+    const dt = snapFrameStep();
+    const dur = (v.duration && isFinite(v.duration)) ? v.duration : Infinity;
+    let pending = dir >= 0 ? 1 : -1;
+    pending += _snapStepQueue;
+    _snapStepQueue = 0;
+    while (pending !== 0) {
+      const step = pending > 0 ? 1 : -1;
+      pending -= step;
+      _snapTime = Math.max(0, Math.min(dur, _snapTime + step * dt));
+      await seekVideoTo(v, _snapTime);
+      captureCurrentFrameToPreview();
+      if (_snapStepQueue !== 0) {
+        pending += _snapStepQueue;
+        _snapStepQueue = 0;
+      }
+    }
+  } finally {
+    _snapStepping = false;
+    if (_snapStepQueue !== 0) {
+      const mag = _snapStepQueue;
+      _snapStepQueue = mag - (mag > 0 ? 1 : -1);
+      stepSnapFrame(mag > 0 ? 1 : -1);
+    }
+  }
+}
+async function ensureSnapPngBlob() {
+  if (_snapPngBlob) return _snapPngBlob;
+  if (!_snapCanvas) throw new Error('no frame');
+  _snapPngBlob = await canvasToBlob(_snapCanvas, 'image/png');
+  return _snapPngBlob;
+}
+$('#snapshotBtn').onclick = () => {
+  const v = $('#video');
+  if (!v || !v.src) return toast('视频尚未就绪');
+  try { v.pause(); } catch {}
+  _snapTime = v.currentTime || 0;
+  captureCurrentFrameToPreview();
 };
+$('#snapPrevFrameBtn')?.addEventListener('click', () => stepSnapFrame(-1));
+$('#snapNextFrameBtn')?.addEventListener('click', () => stepSnapFrame(1));
+$('#snapCloseBtn')?.addEventListener('click', () => closeSnapPreview());
+$('#snapPreview')?.addEventListener('click', (e) => {
+  if (e.target === $('#snapPreview')) closeSnapPreview();
+});
+$('#snapModalBox')?.addEventListener('click', (e) => e.stopPropagation());
+$('#snapDownloadBtn')?.addEventListener('click', async () => {
+  if (_snapUrl && _snapBlob) {
+    const a = document.createElement('a');
+    a.href = _snapUrl;
+    a.download = _snapName || 'snapshot.jpg';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    toast('截图已下载');
+    return;
+  }
+  if (!_snapCanvas) return toast('没有可下载的截图');
+  try {
+    const blob = await canvasToBlob(_snapCanvas, 'image/jpeg', 0.92);
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = _snapName || 'snapshot.jpg';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+    toast('截图已下载');
+  } catch {
+    toast('下载失败');
+  }
+});
+$('#snapCopyBtn')?.addEventListener('click', async () => {
+  if (!_snapCanvas) return toast('没有可复制的截图');
+  let pngBlob;
+  try {
+    pngBlob = await ensureSnapPngBlob();
+  } catch {
+    return toast('复制失败：无法生成图片');
+  }
+  // Only report success when Clipboard API actually writes (HTTPS / localhost).
+  if (window.isSecureContext && navigator.clipboard && window.ClipboardItem) {
+    try {
+      await navigator.clipboard.write([new ClipboardItem({ 'image/png': pngBlob })]);
+      toast('已复制到剪贴板');
+      return;
+    } catch (e) {
+      toast('复制失败，请右键/长按图片复制，或点下载');
+      return;
+    }
+  }
+  // Plain HTTP: no fake success, no new tab — use the preview image itself
+  toast('请直接右键或长按图片复制');
+});
 $('#rewindBtn').onclick = () => {
   const v = $('#video');
   if (!v.src) return;
@@ -4004,6 +4714,9 @@ let _douyinObserver = null;
 let _douyinCurrentPath = null;
 let _douyinHintTimer = null;
 let _douyinProgressRaf = null;
+let _douyinActiveIdx = 0;
+let _douyinRedirecting = false;
+let _douyinListLen = 0;
 function getDouyinPlaylist() {
   const folder = findFolder(S.tree, S.currentFolderPath || S.selPath || (S.tree && S.tree.path));
   if (!folder) return [];
@@ -4011,11 +4724,22 @@ function getDouyinPlaylist() {
   sortVideos(all);
   return all.filter(f => f.type !== 'image');
 }
+function pickDouyinRandomIdx(excludeA, excludeB) {
+  const n = _douyinListLen;
+  if (n <= 1) return 0;
+  let idx = Math.floor(Math.random() * n);
+  let guard = 0;
+  while ((idx === excludeA || idx === excludeB) && guard++ < 16) {
+    idx = Math.floor(Math.random() * n);
+  }
+  return idx;
+}
 function exitDouyinMode() {
   const overlay = $('#douyinOverlay');
   if (!overlay.classList.contains('show')) return;
   const returnPath = _douyinCurrentPath;
   overlay.classList.remove('show');
+  overlay.classList.remove('ui-hidden');
   $('#douyinBtn').classList.remove('active');
   if (_douyinObserver) { _douyinObserver.disconnect(); _douyinObserver = null; }
   if (_douyinProgressRaf) { cancelAnimationFrame(_douyinProgressRaf); _douyinProgressRaf = null; }
@@ -4030,6 +4754,8 @@ function exitDouyinMode() {
   $('#douyinFeed').innerHTML = '';
   document.body.style.overflow = '';
   _douyinCurrentPath = null;
+  _douyinRedirecting = false;
+  _douyinHist = [];
 
   // Return to the video that was playing in douyin mode
   if (returnPath && S.tree) {
@@ -4143,7 +4869,7 @@ function setupDouyinSlideInteractions(slide, vid, f) {
   });
 
   function onPointerDown(e) {
-    if (e.target.closest('.douyin-slide-progress') || e.target.closest('.douyin-speed-btn')) return;
+    if (e.target.closest('.douyin-slide-progress') || e.target.closest('.douyin-speed-btn') || e.target.closest('#douyinClose') || e.target.closest('#douyinShuffleBtn')) return;
     moved = false;
     startX = e.clientX;
     startY = e.clientY;
@@ -4155,10 +4881,20 @@ function setupDouyinSlideInteractions(slide, vid, f) {
   }
   function onPointerUp(e) {
     if (moved || seeking) return;
-    if (e.target.closest('.douyin-slide-progress') || e.target.closest('.douyin-speed-btn')) return;
-    ensureSrc();
-    if (vid.paused) vid.play().catch(() => {});
-    else vid.pause();
+    if (e.target.closest('.douyin-slide-progress') || e.target.closest('.douyin-speed-btn') || e.target.closest('#douyinClose') || e.target.closest('#douyinShuffleBtn')) return;
+    const rect = slide.getBoundingClientRect();
+    const xRatio = (e.clientX - rect.left) / Math.max(1, rect.width);
+    // Center third: play/pause. Left/right thirds: toggle chrome UI.
+    if (xRatio >= 1 / 3 && xRatio <= 2 / 3) {
+      ensureSrc();
+      if (vid.paused) vid.play().catch(() => {});
+      else vid.pause();
+    } else {
+      const overlay = $('#douyinOverlay');
+      const hide = !overlay.classList.contains('ui-hidden');
+      overlay.classList.toggle('ui-hidden', hide);
+      overlay.querySelectorAll('.douyin-slide').forEach(s => s.classList.toggle('ui-hidden', hide));
+    }
   }
   slide.addEventListener('pointerdown', onPointerDown);
   slide.addEventListener('pointermove', onPointerMove);
@@ -4189,6 +4925,10 @@ function enterDouyinMode(startFile) {
     if (idx >= 0) startIdx = idx;
   }
   _douyinCurrentPath = list[startIdx].path;
+  _douyinListLen = list.length;
+  _douyinActiveIdx = startIdx;
+  _douyinRedirecting = false;
+  _douyinHist = [];
 
   list.forEach((f, i) => {
     const slide = document.createElement('div');
@@ -4215,14 +4955,47 @@ function enterDouyinMode(startFile) {
   overlay.classList.add('show');
   $('#douyinBtn').classList.add('active');
   document.body.style.overflow = 'hidden';
+  syncShuffleToggles();
   preloadDouyinAround(startIdx);
 
   // Brief hint, then hide so it doesn't cover the video
   const hint = $('#douyinHint');
   if (hint) {
+    hint.textContent = _navShuffle ? 'Shuffle：下滑随机，上滑可回退' : '上下滑动切换';
     hint.style.opacity = '1';
     clearTimeout(_douyinHintTimer);
-    _douyinHintTimer = setTimeout(() => { hint.style.opacity = '0'; }, 1000);
+    _douyinHintTimer = setTimeout(() => { hint.style.opacity = '0'; }, 1200);
+  }
+
+  function activateDouyinSlide(slide) {
+    const vid = slide.querySelector('video');
+    if (!vid) return;
+    const idx = Number(slide.dataset.idx) || 0;
+    _douyinActiveIdx = idx;
+    _douyinCurrentPath = slide.dataset.path;
+    preloadDouyinAround(idx);
+    if (!vid.getAttribute('src')) {
+      vid.preload = 'auto';
+      vid.src = mediaPlayUrl(slide.dataset.path);
+    }
+    feed.querySelectorAll('video').forEach(v => {
+      if (v !== vid) {
+        v.pause();
+        v.playbackRate = 1;
+      }
+    });
+    feed.querySelectorAll('.douyin-speed-btn').forEach(b => {
+      b.classList.remove('active');
+      b.textContent = '1x';
+    });
+    vid.muted = false;
+    vid.playbackRate = 1;
+    const tryPlay = () => vid.play().catch(() => {});
+    if (vid.readyState >= 2) tryPlay();
+    else {
+      vid.addEventListener('loadeddata', tryPlay, { once: true });
+      tryPlay();
+    }
   }
 
   _douyinObserver = new IntersectionObserver(entries => {
@@ -4232,30 +5005,47 @@ function enterDouyinMode(startFile) {
       if (!vid) continue;
       if (entry.isIntersecting && entry.intersectionRatio >= 0.6) {
         const idx = Number(slide.dataset.idx) || 0;
-        _douyinCurrentPath = slide.dataset.path;
-        preloadDouyinAround(idx);
-        if (!vid.getAttribute('src')) {
-          vid.preload = 'auto';
-          vid.src = mediaPlayUrl(slide.dataset.path);
-        }
-        feed.querySelectorAll('video').forEach(v => {
-          if (v !== vid) {
-            v.pause();
-            v.playbackRate = 1;
+        // Shuffle: forward → random; back → history stack when available
+        if (_navShuffle && !_douyinRedirecting && _douyinListLen > 1) {
+          const prev = _douyinActiveIdx;
+          const wentForward = idx === prev + 1 || (prev === _douyinListLen - 1 && idx === 0);
+          const wentBack = idx === prev - 1 || (prev === 0 && idx === _douyinListLen - 1);
+          if (wentForward && idx !== prev) {
+            _douyinHist.push(prev);
+            if (_douyinHist.length > 80) _douyinHist.shift();
+            _douyinRedirecting = true;
+            const r = pickDouyinRandomIdx(prev, idx);
+            const target = feed.children[r];
+            if (target) {
+              requestAnimationFrame(() => {
+                target.scrollIntoView({ behavior: 'auto', block: 'start' });
+                activateDouyinSlide(target);
+                _douyinRedirecting = false;
+              });
+            } else {
+              _douyinRedirecting = false;
+              activateDouyinSlide(slide);
+            }
+            return;
           }
-        });
-        feed.querySelectorAll('.douyin-speed-btn').forEach(b => {
-          b.classList.remove('active');
-          b.textContent = '1x';
-        });
-        vid.muted = false;
-        vid.playbackRate = 1;
-        const tryPlay = () => vid.play().catch(() => {});
-        if (vid.readyState >= 2) tryPlay();
-        else {
-          vid.addEventListener('loadeddata', tryPlay, { once: true });
-          tryPlay();
+          if (wentBack && idx !== prev && _douyinHist.length) {
+            _douyinRedirecting = true;
+            const backIdx = _douyinHist.pop();
+            const target = feed.children[backIdx];
+            if (target) {
+              requestAnimationFrame(() => {
+                target.scrollIntoView({ behavior: 'auto', block: 'start' });
+                activateDouyinSlide(target);
+                _douyinRedirecting = false;
+              });
+            } else {
+              _douyinRedirecting = false;
+              activateDouyinSlide(slide);
+            }
+            return;
+          }
         }
+        activateDouyinSlide(slide);
       } else if (!entry.isIntersecting) {
         vid.pause();
         vid.playbackRate = 1;
@@ -4269,16 +5059,7 @@ function enterDouyinMode(startFile) {
     const target = feed.children[startIdx];
     if (!target) return;
     target.scrollIntoView({ behavior: 'auto', block: 'start' });
-    const vid = target.querySelector('video');
-    if (vid) {
-      if (!vid.getAttribute('src')) {
-        vid.preload = 'auto';
-        vid.src = mediaPlayUrl(target.dataset.path);
-      }
-      feed.querySelectorAll('video').forEach(v => { if (v !== vid) v.pause(); });
-      vid.muted = false;
-      vid.play().catch(() => {});
-    }
+    activateDouyinSlide(target);
   });
 }
 $('#douyinBtn').onclick = () => {
@@ -4286,6 +5067,19 @@ $('#douyinBtn').onclick = () => {
   else enterDouyinMode(S.curFile);
 };
 $('#douyinClose').onclick = exitDouyinMode;
+$('#douyinShuffleBtn')?.addEventListener('click', (e) => {
+  e.stopPropagation();
+  const next = !_navShuffle;
+  setNavShuffle(next, next ? 'Shuffle 已开' : 'Shuffle 已关');
+  const hint = $('#douyinHint');
+  if (hint) {
+    hint.textContent = next ? 'Shuffle：下滑随机，上滑可回退' : '上下滑动切换';
+    hint.style.opacity = '1';
+    clearTimeout(_douyinHintTimer);
+    _douyinHintTimer = setTimeout(() => { hint.style.opacity = '0'; }, 1200);
+  }
+});
+$('#douyinShuffleBtn')?.addEventListener('pointerdown', (e) => e.stopPropagation());
 
 // Escape exits douyin mode first
 document.addEventListener('keydown', (e) => {
@@ -4346,24 +5140,32 @@ function syncPlayHistoryToServer(file, progress) {
   const layout = $('.layout');
   const btn = $('#sidebarCollapseBtn');
   if (!btn) return;
+  function isDrawerLayout() {
+    return window.matchMedia('(max-width:768px),(max-width:1180px) and (orientation:portrait)').matches;
+  }
   const saved = localStorage.getItem('sidebarCollapsed');
-  const isCollapsed = saved === 'true' && window.innerWidth > 768;
+  const isCollapsed = saved === 'true' && !isDrawerLayout();
   if (isCollapsed) {
     layout.classList.add('collapsed');
     btn.textContent = '▶';
     btn.title = '展开侧栏';
   }
   btn.onclick = function() {
+    if (isDrawerLayout()) return;
     const coll = layout.classList.toggle('collapsed');
     btn.textContent = coll ? '▶' : '◄';
     btn.title = coll ? '展开侧栏' : '收起侧栏';
     localStorage.setItem('sidebarCollapsed', coll);
   };
   window.addEventListener('resize', function() {
-    if (window.innerWidth <= 768 && layout.classList.contains('collapsed')) {
-      layout.classList.remove('collapsed');
-      btn.textContent = '◄';
-      btn.title = '收起侧栏';
+    if (isDrawerLayout()) {
+      if (layout.classList.contains('collapsed')) {
+        layout.classList.remove('collapsed');
+        btn.textContent = '◄';
+        btn.title = '收起侧栏';
+      }
+    } else {
+      closeSidebar();
     }
   });
 })();
