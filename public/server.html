@@ -163,6 +163,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
 .douyin-slide{height:100%;min-height:100%;scroll-snap-align:start;scroll-snap-stop:always;display:flex;align-items:center;justify-content:center;position:relative;background:#000}
 .douyin-slide video,.douyin-slide img{max-width:100%;max-height:100%;width:100%;height:100%;object-fit:contain;background:#000}
 .douyin-slide-meta{position:absolute;left:16px;right:72px;bottom:28px;z-index:2;pointer-events:none}
+@media (max-width:900px){.douyin-slide-meta{right:16px}}
 .douyin-slide-progress{pointer-events:auto;width:100%;height:18px;margin-bottom:8px;display:flex;align-items:center;touch-action:none;cursor:pointer}
 .douyin-slide-progress-track{position:relative;width:100%;height:3px;background:rgba(255,255,255,.25);border-radius:2px;overflow:visible;transition:height .15s}
 .douyin-slide-progress:active .douyin-slide-progress-track,.douyin-slide-progress.dragging .douyin-slide-progress-track{height:5px}
@@ -172,18 +173,16 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
 .douyin-speed-btn{position:absolute;right:16px;bottom:36px;z-index:6;min-width:44px;height:44px;padding:0 10px;border-radius:22px;border:1px solid rgba(255,255,255,.28);background:rgba(0,0,0,.45);color:rgba(255,255,255,.85);font-size:13px;font-weight:700;letter-spacing:.5px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:inherit;backdrop-filter:blur(6px);-webkit-tap-highlight-color:transparent;user-select:none}
 .douyin-speed-btn.active{color:var(--accent);border-color:var(--accent);background:rgba(255,87,34,.18)}
 .douyin-speed-btn:active{transform:scale(.96)}
-.douyin-shuffle-btn{position:absolute;right:72px;bottom:36px;z-index:11;width:44px;height:44px;padding:0;border-radius:22px;border:1px solid rgba(255,255,255,.28);background:rgba(0,0,0,.45);color:rgba(255,255,255,.85);cursor:pointer;display:none;align-items:center;justify-content:center;font-family:inherit;backdrop-filter:blur(6px);-webkit-tap-highlight-color:transparent;user-select:none;transition:opacity .25s,color .15s,border-color .15s,background .15s}
-#douyinOverlay.show .douyin-shuffle-btn{display:flex}
-.douyin-shuffle-btn.active{color:var(--accent);border-color:var(--accent);background:rgba(255,87,34,.18)}
-.douyin-shuffle-btn:active{transform:scale(.96)}
-.douyin-shuffle-btn svg{width:18px;height:18px;display:block}
 .shuffle-toggle{display:inline-flex;align-items:center;justify-content:center;min-width:36px;padding:6px 10px}
 .shuffle-toggle svg{width:15px;height:15px;display:block}
 .shuffle-toggle.active{color:var(--accent);border-color:var(--accent);background:var(--accent-dim)}
-#douyinClose{position:absolute;top:10px;right:10px;z-index:10;width:36px;height:36px;border:none;border-radius:0;background:transparent;color:rgba(255,255,255,.35);font-size:26px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;text-shadow:0 1px 3px rgba(0,0,0,.5);transition:opacity .25s}
-#douyinClose:hover{color:rgba(255,255,255,.7);background:transparent}
+#repeatModeBtn.mode-seq{color:var(--accent);border-color:var(--accent);background:var(--accent-dim)}
+#douyinClose{position:absolute;top:10px;right:10px;z-index:30;width:44px;height:44px;border:none;border-radius:0;background:transparent;color:rgba(255,255,255,.45);font-size:28px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;text-shadow:0 1px 3px rgba(0,0,0,.5);-webkit-tap-highlight-color:transparent}
+#douyinClose:hover{color:rgba(255,255,255,.85);background:transparent}
 #douyinHint{position:absolute;top:18px;left:50%;transform:translateX(-50%);z-index:10;font-size:12px;color:rgba(255,255,255,.55);pointer-events:none;opacity:0;transition:opacity .35s ease}
-#douyinOverlay.ui-hidden #douyinClose,#douyinOverlay.ui-hidden #douyinHint,#douyinOverlay.ui-hidden .douyin-shuffle-btn{opacity:0;pointer-events:none}
+/* Close stays clickable even when chrome is hidden (iPad fast-swipe used to leave X dead) */
+#douyinOverlay.ui-hidden #douyinHint{opacity:0;pointer-events:none}
+#douyinOverlay.ui-hidden #douyinClose{opacity:.4;pointer-events:auto}
 .douyin-slide-meta,.douyin-speed-btn{transition:opacity .25s}
 .douyin-slide.ui-hidden .douyin-slide-meta,.douyin-slide.ui-hidden .douyin-speed-btn{opacity:0;pointer-events:none}
 .notes-section{display:none;border-top:1px solid var(--border);padding-top:14px;margin-top:8px;margin-bottom:4px}
@@ -649,6 +648,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
         <button class="detail-action-btn danger" id="detailDeleteBtn" title="删除 (Del)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg></button>
         <div class="spacer"></div>
         <span id="navInfo" style="font-size:11px;color:var(--text3)"></span>
+        <button type="button" class="btn btn-ghost btn-sm shuffle-toggle" id="repeatModeBtn" title="单曲循环" aria-label="播放模式" aria-pressed="false"><svg class="repeat-icon-loop" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/><path d="M11 10h1v5"/><path d="M10.5 15h2.5"/></svg><svg class="repeat-icon-seq" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" style="display:none"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 014-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 01-4 4H3"/></svg></button>
         <button type="button" class="btn btn-ghost btn-sm shuffle-toggle" id="shuffleBtn" title="Shuffle：开启后「下一个」随机，「上一个」可回退" aria-label="Shuffle" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg></button>
         <button class="btn btn-ghost btn-sm" id="prevBtn" title="上一个 (↑)">上一个</button>
         <button class="btn btn-ghost btn-sm" id="nextBtn" title="下一个 (↓)">下一个</button>
@@ -774,7 +774,6 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
 <div id="douyinOverlay">
   <button id="douyinClose" title="退出">&times;</button>
   <div id="douyinHint">上下滑动切换</div>
-  <button type="button" class="douyin-shuffle-btn" id="douyinShuffleBtn" title="Shuffle" aria-label="Shuffle" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg></button>
   <div id="douyinFeed"></div>
 </div>
 
@@ -1938,10 +1937,12 @@ function openDetail(file, noPush) {
     if (vbox) { vbox.style.overflow = ''; }
     if (detailImg) detailImg.style.display = 'none';
     v.src = mediaPlayUrl(file.path);
+    applyRepeatMode();
     v.load();
     v.play().catch(() => {});
     v.oncanplay = () => {
       v.style.opacity = '1';
+      applyRepeatMode();
       _ffLocked = false; _ffActive = false; _setFFOff(v);
       _revLocked = false; _revActive = false; _setRevOff(v);
       try {
@@ -1953,6 +1954,7 @@ function openDetail(file, noPush) {
       v.oncanplay = null;
     };
   }
+  if ($('#repeatModeBtn')) $('#repeatModeBtn').style.display = isImage ? 'none' : '';
 
   const mkvWarn = $('#mkvSeekWarn');
   if (mkvWarn) {
@@ -2370,7 +2372,8 @@ $('#detailDeleteBtn').onclick = () => deleteCurrentVideo();
 let _navShuffle = localStorage.getItem('nav_shuffle_mode') === '1'
   || localStorage.getItem('douyin_random_mode') === '1';
 let _detailNavHist = [];
-let _douyinHist = [];
+/** 'loop' = 单曲循环; 'sequence' = 播完自动下一个（遵循顺序/Shuffle） */
+let _repeatMode = localStorage.getItem('nav_repeat_mode') === 'sequence' ? 'sequence' : 'loop';
 function syncShuffleToggles() {
   const on = !!_navShuffle;
   const detailBtn = $('#shuffleBtn');
@@ -2378,26 +2381,42 @@ function syncShuffleToggles() {
     detailBtn.classList.toggle('active', on);
     detailBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
     detailBtn.title = on
-      ? 'Shuffle 开：下一个随机，上一个可回到刚才的视频'
-      : 'Shuffle 关：点击开启';
-  }
-  const dyBtn = $('#douyinShuffleBtn');
-  if (dyBtn) {
-    dyBtn.classList.toggle('active', on);
-    dyBtn.setAttribute('aria-pressed', on ? 'true' : 'false');
-    dyBtn.title = on
-      ? 'Shuffle 开：下滑随机，上滑可回到刚才的视频'
+      ? 'Shuffle 开：下一个随机，上一个可回退（不影响抖音模式）'
       : 'Shuffle 关：点击开启';
   }
 }
+function applyRepeatMode() {
+  const v = $('#video');
+  const btn = $('#repeatModeBtn');
+  const isSeq = _repeatMode === 'sequence';
+  if (v) v.loop = !isSeq;
+  if (!btn) return;
+  btn.classList.toggle('mode-seq', isSeq);
+  btn.setAttribute('aria-pressed', isSeq ? 'true' : 'false');
+  btn.title = isSeq
+    ? '顺序播放：播完自动下一个（遵循 Shuffle）'
+    : '单曲循环：当前视频重复播放';
+  const loopIcon = btn.querySelector('.repeat-icon-loop');
+  const seqIcon = btn.querySelector('.repeat-icon-seq');
+  if (loopIcon) loopIcon.style.display = isSeq ? 'none' : 'block';
+  if (seqIcon) seqIcon.style.display = isSeq ? 'block' : 'none';
+}
+function setRepeatMode(mode, toastMsg) {
+  _repeatMode = mode === 'sequence' ? 'sequence' : 'loop';
+  localStorage.setItem('nav_repeat_mode', _repeatMode);
+  applyRepeatMode();
+  if (toastMsg) toast(toastMsg);
+}
+$('#repeatModeBtn')?.addEventListener('click', () => {
+  const next = _repeatMode === 'loop' ? 'sequence' : 'loop';
+  setRepeatMode(next, next === 'sequence' ? '顺序播放：播完自动下一个' : '单曲循环');
+});
+applyRepeatMode();
 function setNavShuffle(on, toastMsg) {
   _navShuffle = !!on;
   localStorage.setItem('nav_shuffle_mode', _navShuffle ? '1' : '0');
   localStorage.removeItem('douyin_random_mode');
-  if (!_navShuffle) {
-    _detailNavHist = [];
-    _douyinHist = [];
-  }
+  if (!_navShuffle) _detailNavHist = [];
   syncShuffleToggles();
   if (toastMsg) toast(toastMsg);
 }
@@ -4654,6 +4673,20 @@ $('#playPauseBtn').onclick = () => {
 document.addEventListener('play', e => { if (e.target === $('#video')) $('#playPauseBtn').textContent = '⏸'; }, true);
 document.addEventListener('pause', e => { if (e.target === $('#video')) $('#playPauseBtn').textContent = '▶'; }, true);
 
+// Sequence mode: when video ends, act like pressing「下一个」(respects Shuffle)
+{
+  const v = $('#video');
+  if (v) {
+    v.addEventListener('ended', () => {
+      if (_repeatMode !== 'sequence') return;
+      if (S.playingClipId || (typeof previewActive !== 'undefined' && previewActive)) return;
+      if ($('#detailView')?.style.display === 'none') return;
+      // Native loop may still fire ended on some browsers — force next
+      $('#nextBtn')?.click();
+    });
+  }
+}
+
 // ── Time label update in detail view ──
 let _lastProgressSync = 0;
 {
@@ -4692,7 +4725,6 @@ let _douyinCurrentPath = null;
 let _douyinHintTimer = null;
 let _douyinProgressRaf = null;
 let _douyinActiveIdx = 0;
-let _douyinRedirecting = false;
 let _douyinListLen = 0;
 function getDouyinPlaylist() {
   const folder = findFolder(S.tree, S.currentFolderPath || S.selPath || (S.tree && S.tree.path));
@@ -4701,15 +4733,16 @@ function getDouyinPlaylist() {
   sortVideos(all);
   return all.filter(f => f.type !== 'image');
 }
-function pickDouyinRandomIdx(excludeA, excludeB) {
-  const n = _douyinListLen;
-  if (n <= 1) return 0;
-  let idx = Math.floor(Math.random() * n);
-  let guard = 0;
-  while ((idx === excludeA || idx === excludeB) && guard++ < 16) {
-    idx = Math.floor(Math.random() * n);
+/** Douyin feed is always folder order from current video — independent of Shuffle. */
+function buildDouyinFeedList(startFile) {
+  const list = getDouyinPlaylist().slice();
+  let startIdx = 0;
+  const start = startFile || S.curFile;
+  if (start) {
+    const idx = list.findIndex(f => f.path === start.path);
+    if (idx >= 0) startIdx = idx;
   }
-  return idx;
+  return { list, startIdx };
 }
 function exitDouyinMode() {
   const overlay = $('#douyinOverlay');
@@ -4723,16 +4756,18 @@ function exitDouyinMode() {
   clearTimeout(_douyinHintTimer);
   const hint = $('#douyinHint');
   if (hint) hint.style.opacity = '0';
-  $('#douyinFeed').querySelectorAll('video').forEach(v => {
-    v.pause();
-    v.removeAttribute('src');
-    v.load();
+  const feed = $('#douyinFeed');
+  if (feed && feed._douyinScrollHandler) {
+    feed.removeEventListener('scroll', feed._douyinScrollHandler);
+    feed._douyinScrollHandler = null;
+  }
+  feed?.querySelectorAll('video').forEach(v => {
+    try { v.pause(); } catch {}
+    try { v.removeAttribute('src'); } catch {}
   });
-  $('#douyinFeed').innerHTML = '';
+  if (feed) feed.innerHTML = '';
   document.body.style.overflow = '';
   _douyinCurrentPath = null;
-  _douyinRedirecting = false;
-  _douyinHist = [];
 
   // Return to the video that was playing in douyin mode
   if (returnPath && S.tree) {
@@ -4748,30 +4783,45 @@ function exitDouyinMode() {
     }
   }
 }
-/** Keep current ±1 videos buffered; unload farther ones to save mobile memory */
+/** Keep nearby videos buffered. Wider window + no vid.load() after clear (iOS black-screen trap). */
 function preloadDouyinAround(activeIdx) {
   const feed = $('#douyinFeed');
   if (!feed) return;
   const slides = Array.from(feed.children);
+  const KEEP = 2;   // current ±2 stay loaded (helps fast swipe)
+  const DROP = 4;   // only unload beyond this
   slides.forEach((slide, i) => {
     const vid = slide.querySelector('video');
     if (!vid) return;
     const dist = Math.abs(i - activeIdx);
     const path = slide.dataset.path;
     const url = mediaPlayUrl(path);
-    if (dist <= 1) {
+    if (dist <= KEEP) {
       if (!vid.getAttribute('src')) {
         vid.preload = 'auto';
         vid.src = url;
       }
-    } else if (dist > 2) {
+    } else if (dist > DROP) {
       if (vid.getAttribute('src')) {
-        vid.pause();
-        vid.removeAttribute('src');
-        vid.load();
+        try { vid.pause(); } catch {}
+        // Avoid vid.load() after clearing — Safari/iPad often goes permanently black
+        try { vid.removeAttribute('src'); } catch {}
       }
     }
   });
+}
+function findDouyinSlideNearestCenter() {
+  const feed = $('#douyinFeed');
+  if (!feed || !feed.children.length) return null;
+  const mid = feed.scrollTop + feed.clientHeight / 2;
+  let best = null;
+  let bestDist = Infinity;
+  Array.from(feed.children).forEach(slide => {
+    const c = slide.offsetTop + slide.offsetHeight / 2;
+    const d = Math.abs(c - mid);
+    if (d < bestDist) { bestDist = d; best = slide; }
+  });
+  return best;
 }
 function setupDouyinSlideInteractions(slide, vid, f) {
   const fill = slide.querySelector('.douyin-slide-progress-fill');
@@ -4846,7 +4896,7 @@ function setupDouyinSlideInteractions(slide, vid, f) {
   });
 
   function onPointerDown(e) {
-    if (e.target.closest('.douyin-slide-progress') || e.target.closest('.douyin-speed-btn') || e.target.closest('#douyinClose') || e.target.closest('#douyinShuffleBtn')) return;
+    if (e.target.closest('.douyin-slide-progress') || e.target.closest('.douyin-speed-btn') || e.target.closest('#douyinClose')) return;
     moved = false;
     startX = e.clientX;
     startY = e.clientY;
@@ -4858,7 +4908,7 @@ function setupDouyinSlideInteractions(slide, vid, f) {
   }
   function onPointerUp(e) {
     if (moved || seeking) return;
-    if (e.target.closest('.douyin-slide-progress') || e.target.closest('.douyin-speed-btn') || e.target.closest('#douyinClose') || e.target.closest('#douyinShuffleBtn')) return;
+    if (e.target.closest('.douyin-slide-progress') || e.target.closest('.douyin-speed-btn') || e.target.closest('#douyinClose')) return;
     const rect = slide.getBoundingClientRect();
     const xRatio = (e.clientX - rect.left) / Math.max(1, rect.width);
     // Center third: play/pause. Left/right thirds: toggle chrome UI.
@@ -4880,7 +4930,7 @@ function setupDouyinSlideInteractions(slide, vid, f) {
 }
 function enterDouyinMode(startFile) {
   if (!S.tree) return toast('请先打开一个文件夹');
-  const list = getDouyinPlaylist();
+  const { list, startIdx } = buildDouyinFeedList(startFile);
   if (!list.length) return toast('当前没有可播放的视频');
 
   // Pause detail player if it's currently playing
@@ -4895,27 +4945,19 @@ function enterDouyinMode(startFile) {
   if (_douyinProgressRaf) { cancelAnimationFrame(_douyinProgressRaf); _douyinProgressRaf = null; }
   feed.innerHTML = '';
 
-  let startIdx = 0;
-  const start = startFile || S.curFile;
-  if (start) {
-    const idx = list.findIndex(f => f.path === start.path);
-    if (idx >= 0) startIdx = idx;
-  }
   _douyinCurrentPath = list[startIdx].path;
   _douyinListLen = list.length;
   _douyinActiveIdx = startIdx;
-  _douyinRedirecting = false;
-  _douyinHist = [];
 
   list.forEach((f, i) => {
     const slide = document.createElement('div');
     slide.className = 'douyin-slide';
     slide.dataset.path = f.path;
     slide.dataset.idx = String(i);
-    const near = Math.abs(i - startIdx) <= 1;
+    const near = Math.abs(i - startIdx) <= 2;
     const srcAttr = near ? ` src="${mediaPlayUrl(f.path)}"` : '';
     slide.innerHTML = `
-      <video playsinline loop preload="${near ? 'auto' : 'none'}"${srcAttr}></video>
+      <video playsinline webkit-playsinline loop preload="${near ? 'auto' : 'none'}"${srcAttr}></video>
       <button type="button" class="douyin-speed-btn" title="切换倍速">1x</button>
       <div class="douyin-slide-meta">
         <div class="douyin-slide-progress">
@@ -4930,24 +4972,30 @@ function enterDouyinMode(startFile) {
     feed.appendChild(slide);
   });
   overlay.classList.add('show');
+  overlay.classList.remove('ui-hidden');
   $('#douyinBtn').classList.add('active');
   document.body.style.overflow = 'hidden';
-  syncShuffleToggles();
   preloadDouyinAround(startIdx);
 
   // Brief hint, then hide so it doesn't cover the video
   const hint = $('#douyinHint');
   if (hint) {
-    hint.textContent = _navShuffle ? 'Shuffle：下滑随机，上滑可回退' : '上下滑动切换';
+    hint.textContent = '上下滑动切换';
     hint.style.opacity = '1';
     clearTimeout(_douyinHintTimer);
     _douyinHintTimer = setTimeout(() => { hint.style.opacity = '0'; }, 1200);
   }
 
+  let _douyinActivating = null;
   function activateDouyinSlide(slide) {
+    if (!slide) return;
     const vid = slide.querySelector('video');
     if (!vid) return;
     const idx = Number(slide.dataset.idx) || 0;
+    if (_douyinActivating === slide && _douyinActiveIdx === idx && vid.getAttribute('src') && !vid.paused) {
+      return;
+    }
+    _douyinActivating = slide;
     _douyinActiveIdx = idx;
     _douyinCurrentPath = slide.dataset.path;
     preloadDouyinAround(idx);
@@ -4957,7 +5005,7 @@ function enterDouyinMode(startFile) {
     }
     feed.querySelectorAll('video').forEach(v => {
       if (v !== vid) {
-        v.pause();
+        try { v.pause(); } catch {}
         v.playbackRate = 1;
       }
     });
@@ -4967,7 +5015,15 @@ function enterDouyinMode(startFile) {
     });
     vid.muted = false;
     vid.playbackRate = 1;
-    const tryPlay = () => vid.play().catch(() => {});
+    const tryPlay = () => {
+      if (_douyinActivating !== slide) return;
+      vid.play().catch(() => {
+        // iPad sometimes needs a second kick after src attaches
+        setTimeout(() => {
+          if (_douyinActivating === slide) vid.play().catch(() => {});
+        }, 120);
+      });
+    };
     if (vid.readyState >= 2) tryPlay();
     else {
       vid.addEventListener('loadeddata', tryPlay, { once: true });
@@ -4980,57 +5036,28 @@ function enterDouyinMode(startFile) {
       const slide = entry.target;
       const vid = slide.querySelector('video');
       if (!vid) continue;
-      if (entry.isIntersecting && entry.intersectionRatio >= 0.6) {
-        const idx = Number(slide.dataset.idx) || 0;
-        // Shuffle: forward → random; back → history stack when available
-        if (_navShuffle && !_douyinRedirecting && _douyinListLen > 1) {
-          const prev = _douyinActiveIdx;
-          const wentForward = idx === prev + 1 || (prev === _douyinListLen - 1 && idx === 0);
-          const wentBack = idx === prev - 1 || (prev === 0 && idx === _douyinListLen - 1);
-          if (wentForward && idx !== prev) {
-            _douyinHist.push(prev);
-            if (_douyinHist.length > 80) _douyinHist.shift();
-            _douyinRedirecting = true;
-            const r = pickDouyinRandomIdx(prev, idx);
-            const target = feed.children[r];
-            if (target) {
-              requestAnimationFrame(() => {
-                target.scrollIntoView({ behavior: 'auto', block: 'start' });
-                activateDouyinSlide(target);
-                _douyinRedirecting = false;
-              });
-            } else {
-              _douyinRedirecting = false;
-              activateDouyinSlide(slide);
-            }
-            return;
-          }
-          if (wentBack && idx !== prev && _douyinHist.length) {
-            _douyinRedirecting = true;
-            const backIdx = _douyinHist.pop();
-            const target = feed.children[backIdx];
-            if (target) {
-              requestAnimationFrame(() => {
-                target.scrollIntoView({ behavior: 'auto', block: 'start' });
-                activateDouyinSlide(target);
-                _douyinRedirecting = false;
-              });
-            } else {
-              _douyinRedirecting = false;
-              activateDouyinSlide(slide);
-            }
-            return;
-          }
-        }
+      if (entry.isIntersecting && entry.intersectionRatio >= 0.55) {
         activateDouyinSlide(slide);
       } else if (!entry.isIntersecting) {
-        vid.pause();
+        try { vid.pause(); } catch {}
         vid.playbackRate = 1;
       }
     }
-  }, { root: feed, threshold: [0.6] });
+  }, { root: feed, threshold: [0.55, 0.75] });
 
   feed.querySelectorAll('.douyin-slide').forEach(s => _douyinObserver.observe(s));
+
+  // Fast swipe fallback: IntersectionObserver can miss on iPad — snap to nearest after scroll settles
+  let _douyinScrollTimer = null;
+  const onFeedScroll = () => {
+    clearTimeout(_douyinScrollTimer);
+    _douyinScrollTimer = setTimeout(() => {
+      const nearest = findDouyinSlideNearestCenter();
+      if (nearest) activateDouyinSlide(nearest);
+    }, 60);
+  };
+  feed.addEventListener('scroll', onFeedScroll, { passive: true });
+  feed._douyinScrollHandler = onFeedScroll;
 
   requestAnimationFrame(() => {
     const target = feed.children[startIdx];
@@ -5043,20 +5070,11 @@ $('#douyinBtn').onclick = () => {
   if ($('#douyinOverlay').classList.contains('show')) exitDouyinMode();
   else enterDouyinMode(S.curFile);
 };
-$('#douyinClose').onclick = exitDouyinMode;
-$('#douyinShuffleBtn')?.addEventListener('click', (e) => {
+$('#douyinClose').onclick = (e) => {
   e.stopPropagation();
-  const next = !_navShuffle;
-  setNavShuffle(next, next ? 'Shuffle 已开' : 'Shuffle 已关');
-  const hint = $('#douyinHint');
-  if (hint) {
-    hint.textContent = next ? 'Shuffle：下滑随机，上滑可回退' : '上下滑动切换';
-    hint.style.opacity = '1';
-    clearTimeout(_douyinHintTimer);
-    _douyinHintTimer = setTimeout(() => { hint.style.opacity = '0'; }, 1200);
-  }
-});
-$('#douyinShuffleBtn')?.addEventListener('pointerdown', (e) => e.stopPropagation());
+  exitDouyinMode();
+};
+$('#douyinClose').addEventListener('pointerdown', (e) => e.stopPropagation());
 
 // Escape exits douyin mode first
 document.addEventListener('keydown', (e) => {
