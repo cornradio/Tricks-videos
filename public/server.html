@@ -124,6 +124,23 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
 .ctrl-btn.rel{position:relative}
 .notes-tip{display:none;position:fixed;z-index:220;max-width:280px;padding:8px 10px;background:var(--card);border:1px solid var(--border);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.55);font-size:12px;line-height:1.45;color:var(--text);white-space:pre-wrap;word-break:break-word;pointer-events:none}
 .notes-tip.show{display:block}
+.litter-warn{display:none;margin-top:2px;padding:6px 8px;font-size:11px;line-height:1.45;color:var(--text2);background:var(--bg);border:1px solid var(--border);border-radius:6px;width:100%;box-sizing:border-box}
+.litter-warn.show{display:block}
+.litter-warn strong{color:var(--text);font-weight:600}
+.media-info-modal{display:none;position:fixed;inset:0;z-index:80;background:rgba(0,0,0,.55);align-items:center;justify-content:center;padding:20px}
+.media-info-modal.show{display:flex}
+.media-info-box{background:var(--card);border:1px solid var(--border);border-radius:12px;width:min(440px,100%);max-height:min(80vh,560px);overflow:hidden;display:flex;flex-direction:column;box-shadow:0 16px 48px rgba(0,0,0,.55)}
+.media-info-head{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border)}
+.media-info-head span{font-size:15px;font-weight:600;color:var(--text)}
+.media-info-close{background:none;border:none;color:var(--text2);font-size:22px;cursor:pointer;line-height:1;padding:0 4px}
+.media-info-close:hover{color:var(--text)}
+.media-info-body{padding:12px 16px 16px;overflow-y:auto;font-size:12px;line-height:1.5;color:var(--text)}
+.media-info-row{display:grid;grid-template-columns:88px 1fr;gap:6px 10px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,.04)}
+.media-info-row:last-child{border-bottom:none}
+.media-info-k{color:var(--text3);flex-shrink:0}
+.media-info-v{color:var(--text);word-break:break-all;font-variant-numeric:tabular-nums}
+.media-info-sec{margin:12px 0 4px;font-size:11px;font-weight:600;color:var(--accent);letter-spacing:.04em;text-transform:uppercase}
+.media-info-body .muted{color:var(--text3)}
 .snap-modal{display:none;position:fixed;inset:0;z-index:200;background:#000;flex-direction:column;padding:0}
 .snap-modal.show{display:flex}
 .snap-modal-close{position:absolute;top:12px;right:14px;z-index:3;width:40px;height:40px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.2);border-radius:0;color:rgba(255,255,255,.75);font-size:26px;cursor:pointer;line-height:1;padding:0;display:flex;align-items:center;justify-content:center}
@@ -505,6 +522,18 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
           <span>删除时不提示确认</span>
         </label>
         <div class="help-shortcut" style="align-items:flex-start;flex-direction:column;gap:4px">
+          <label style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;width:100%">
+            <input type="checkbox" id="noFolderLitterChk" style="accent-color:var(--accent)">
+            <span>禁止导出拉屎</span>
+          </label>
+          <div class="litter-warn" id="noFolderLitterWarn">
+            <strong>开启后不会在视频文件夹内生成附属文件：</strong><br>
+            · 无法写入文件夹封面（<code>.TThumb.PNG</code>）<br>
+            · 备注不再生成旁路文件（<code>*.notes.txt</code>），改存到服务器 data 目录<br>
+            · 已有的点文件不会自动删除
+          </div>
+        </div>
+        <div class="help-shortcut" style="align-items:flex-start;flex-direction:column;gap:4px">
           <span>排除文件夹（不记录历史）</span>
           <div class="exclude-list" id="excludeList"></div>
         </div>
@@ -672,6 +701,7 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
       </div>
       <div id="speedIndicator" style="display:none;position:fixed;bottom:60px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.88);color:var(--accent);font-size:13px;font-weight:700;padding:6px 18px;border-radius:20px;border:1px solid var(--accent);letter-spacing:1px;white-space:nowrap;z-index:999;pointer-events:none">2x 倍速</div>
       <div class="detail-name" id="detailName" style="display:flex;align-items:center"><span class="detail-drag-icon" id="detailDragIcon" title="拖拽到左侧文件夹以移动"><svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M4 1h5l3 3v9a1 1 0 01-1 1H4a1 1 0 01-1-1V2a1 1 0 011-1z"/><path d="M9 1v3h3"/></svg></span><span id="detailNameText" style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"></span>
+        <button type="button" class="ctrl-btn" id="mediaInfoBtn" title="视频信息" aria-label="视频信息"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg></button>
         <button type="button" class="ctrl-btn rel" id="notesBtn" title="备注" aria-label="备注"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><line x1="10" y1="9" x2="8" y2="9"/></svg><span class="ctrl-badge dot" id="notesBadge" style="display:none"></span></button>
         <button type="button" class="ctrl-btn rel" id="clipsToggleBtn" title="片段标记" aria-label="片段标记"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/><line x1="7" y1="2" x2="7" y2="22"/><line x1="17" y1="2" x2="17" y2="22"/><line x1="2" y1="12" x2="22" y2="12"/><line x1="2" y1="7" x2="7" y2="7"/><line x1="2" y1="17" x2="7" y2="17"/><line x1="17" y1="17" x2="22" y2="17"/><line x1="17" y1="7" x2="22" y2="7"/></svg><span class="ctrl-badge" id="clipsBadge" style="display:none">0</span></button>
         <button class="ctrl-btn" id="snapshotBtn" title="截图 (S)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg></button>
@@ -725,6 +755,17 @@ body{background:var(--bg);color:var(--text);font-family:-apple-system,'Segoe UI'
 </div>
 
 <div class="notes-tip" id="notesTip"></div>
+<div class="media-info-modal" id="mediaInfoModal">
+  <div class="media-info-box" id="mediaInfoBox">
+    <div class="media-info-head">
+      <span>视频信息</span>
+      <button type="button" class="media-info-close" id="mediaInfoClose" aria-label="关闭">×</button>
+    </div>
+    <div class="media-info-body" id="mediaInfoBody">
+      <div class="muted">加载中…</div>
+    </div>
+  </div>
+</div>
 <div class="snap-modal" id="snapPreview" role="dialog" aria-modal="true" aria-label="截图预览">
   <div class="snap-modal-box" id="snapModalBox">
     <button type="button" class="snap-modal-close" id="snapCloseBtn" title="关闭 (Esc)" aria-label="关闭">×</button>
@@ -1493,6 +1534,10 @@ function updateFolderThumb(folderPath) {
 
 async function uploadFolderThumb(file) {
   if (!S.currentFolderPath) return;
+  if (isNoFolderLitter()) {
+    toast('已开启「禁止导出拉屎」：无法写入文件夹封面 .TThumb.PNG');
+    return;
+  }
   const fd = new FormData();
   fd.append('folderPath', S.currentFolderPath);
   fd.append('thumb', file, '.TThumb.PNG');
@@ -2594,6 +2639,121 @@ $('#notesBtn')?.addEventListener('mouseenter', () => {
 });
 $('#notesBtn')?.addEventListener('mouseleave', () => hideNotesTip());
 
+// ── Media info panel ──
+function _fmtBytes(n) {
+  n = Number(n) || 0;
+  if (n < 1024) return n + ' B';
+  if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
+  if (n < 1024 * 1024 * 1024) return (n / (1024 * 1024)).toFixed(2) + ' MB';
+  return (n / (1024 * 1024 * 1024)).toFixed(2) + ' GB';
+}
+function _fmtDur(sec) {
+  sec = Math.max(0, Number(sec) || 0);
+  const h = Math.floor(sec / 3600);
+  const m = Math.floor((sec % 3600) / 60);
+  const s = Math.floor(sec % 60);
+  const ms = Math.round((sec % 1) * 1000);
+  const base = h > 0
+    ? `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
+    : `${m}:${String(s).padStart(2, '0')}`;
+  return ms ? `${base}.${String(ms).padStart(3, '0')}` : base;
+}
+function _fmtBitrate(bps) {
+  bps = Number(bps) || 0;
+  if (!bps) return '—';
+  if (bps >= 1e6) return (bps / 1e6).toFixed(2) + ' Mbps';
+  if (bps >= 1e3) return (bps / 1e3).toFixed(0) + ' kbps';
+  return bps + ' bps';
+}
+function _fmtFps(rate) {
+  if (!rate || typeof rate !== 'string') return '—';
+  const parts = rate.split('/');
+  if (parts.length === 2) {
+    const a = parseFloat(parts[0]), b = parseFloat(parts[1]);
+    if (b) return (a / b).toFixed(3).replace(/\.?0+$/, '') + ' fps';
+  }
+  return rate;
+}
+function _fmtDate(iso) {
+  if (!iso) return '—';
+  try {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return iso;
+    const p = n => String(n).padStart(2, '0');
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`;
+  } catch { return iso; }
+}
+function _infoRow(k, v) {
+  return `<div class="media-info-row"><div class="media-info-k">${k}</div><div class="media-info-v">${v == null || v === '' ? '—' : v}</div></div>`;
+}
+function renderMediaInfo(d) {
+  const body = $('#mediaInfoBody');
+  if (!body) return;
+  if (!d) { body.innerHTML = '<div class="muted">无法读取信息</div>'; return; }
+  let html = '';
+  html += '<div class="media-info-sec">文件</div>';
+  html += _infoRow('名称', d.name);
+  html += _infoRow('路径', d.path);
+  html += _infoRow('大小', _fmtBytes(d.size) + (d.size ? ` (${d.size.toLocaleString()} B)` : ''));
+  html += _infoRow('时长', d.duration ? `${_fmtDur(d.duration)} (${d.duration.toFixed(3)}s)` : '—');
+  html += _infoRow('总码率', _fmtBitrate(d.bitrate));
+  html += _infoRow('容器', d.formatLongName || d.formatName || '—');
+  html += _infoRow('创建', _fmtDate(d.birthtime));
+  html += _infoRow('修改', _fmtDate(d.mtime));
+  if (!d.probeOk) html += '<div class="muted" style="margin-top:8px">ffprobe 不可用，仅显示文件系统信息</div>';
+
+  (d.video || []).forEach((v, i) => {
+    html += `<div class="media-info-sec">视频${(d.video.length > 1 ? ' #' + (i + 1) : '')}</div>`;
+    html += _infoRow('编码', [v.codec, v.profile].filter(Boolean).join(' · '));
+    html += _infoRow('分辨率', (v.width && v.height) ? `${v.width}×${v.height}` : '—');
+    html += _infoRow('帧率', _fmtFps(v.fps));
+    html += _infoRow('像素格式', v.pixFmt || '—');
+    html += _infoRow('码率', _fmtBitrate(v.bitrate));
+  });
+  (d.audio || []).forEach((a, i) => {
+    html += `<div class="media-info-sec">音频${(d.audio.length > 1 ? ' #' + (i + 1) : '')}</div>`;
+    html += _infoRow('编码', a.codec || '—');
+    html += _infoRow('采样率', a.sampleRate ? a.sampleRate.toLocaleString() + ' Hz' : '—');
+    html += _infoRow('声道', a.channels ? `${a.channels}${a.channelLayout ? ' (' + a.channelLayout + ')' : ''}` : '—');
+    html += _infoRow('码率', _fmtBitrate(a.bitrate));
+    if (a.language) html += _infoRow('语言', a.language);
+  });
+  if ((d.subtitle || []).length) {
+    html += '<div class="media-info-sec">字幕轨</div>';
+    d.subtitle.forEach((s, i) => {
+      const label = [s.codec, s.language, s.title].filter(Boolean).join(' · ') || ('#' + (i + 1));
+      html += _infoRow('#' + (i + 1), label);
+    });
+  }
+  body.innerHTML = html;
+}
+async function openMediaInfo() {
+  const modal = $('#mediaInfoModal');
+  const body = $('#mediaInfoBody');
+  if (!modal || !S.curFile?.path) return toast('没有正在查看的文件');
+  modal.classList.add('show');
+  if (body) body.innerHTML = '<div class="muted">加载中…</div>';
+  try {
+    const r = await fetch('/api/local/media-info?path=' + encodeURIComponent(S.curFile.path));
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error || '加载失败');
+    renderMediaInfo(d);
+  } catch (e) {
+    if (body) body.innerHTML = `<div class="muted">${e.message || '加载失败'}</div>`;
+  }
+}
+function closeMediaInfo() {
+  $('#mediaInfoModal')?.classList.remove('show');
+}
+$('#mediaInfoBtn')?.addEventListener('click', (e) => {
+  e.stopPropagation();
+  openMediaInfo();
+});
+$('#mediaInfoClose')?.addEventListener('click', closeMediaInfo);
+$('#mediaInfoModal')?.addEventListener('click', (e) => {
+  if (e.target === $('#mediaInfoModal')) closeMediaInfo();
+});
+
 // ── Clip Storage (server API) ──
 async function loadClips() {
   try {
@@ -3240,6 +3400,11 @@ document.addEventListener('keydown', e => {
   // Allow Esc to close popups even from textarea
   if (e.key === 'Escape') {
     if (isSnapModalOpen()) { e.preventDefault(); closeSnapPreview(); return; }
+    if ($('#mediaInfoModal')?.classList.contains('show')) {
+      e.preventDefault();
+      closeMediaInfo();
+      return;
+    }
     if ($('#notesSection')?.classList.contains('show')) {
       e.preventDefault();
       closeNotesPanel();
@@ -3329,7 +3494,43 @@ function skipDeleteConfirm() {
   return localStorage.getItem('skip_delete_confirm') === '1';
 }
 
-// Sync settings UI with localStorage
+let _noFolderLitter = false;
+function isNoFolderLitter() { return !!_noFolderLitter; }
+function syncNoFolderLitterWarn() {
+  const warn = $('#noFolderLitterWarn');
+  const chk = $('#noFolderLitterChk');
+  if (warn) warn.classList.toggle('show', !!(chk && chk.checked));
+}
+async function loadAppSettings() {
+  try {
+    const r = await fetch('/api/app-settings');
+    if (!r.ok) return;
+    const d = await r.json();
+    _noFolderLitter = !!d.noFolderLitter;
+    const chk = $('#noFolderLitterChk');
+    if (chk) chk.checked = _noFolderLitter;
+    syncNoFolderLitterWarn();
+  } catch {}
+}
+async function setNoFolderLitter(on) {
+  _noFolderLitter = !!on;
+  syncNoFolderLitterWarn();
+  try {
+    const r = await fetch('/api/app-settings', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ noFolderLitter: _noFolderLitter })
+    });
+    if (!r.ok) throw new Error('save failed');
+    toast(_noFolderLitter
+      ? '已禁止文件夹内生成附属文件（封面 / 备注旁路）'
+      : '已允许在文件夹内写入封面与备注旁路文件');
+  } catch {
+    toast('设置保存失败');
+  }
+}
+
+// Sync settings UI with localStorage / server
 (function() {
   const input = $('#fsHideDelayInput');
   if (input) {
@@ -3349,6 +3550,14 @@ function skipDeleteConfirm() {
       toast(skipDel.checked ? '已关闭删除确认' : '已开启删除确认');
     });
   }
+  const litterChk = $('#noFolderLitterChk');
+  if (litterChk) {
+    litterChk.addEventListener('change', () => {
+      syncNoFolderLitterWarn();
+      setNoFolderLitter(litterChk.checked);
+    });
+  }
+  loadAppSettings();
 })();
 
 // ── Preview ──

@@ -375,11 +375,35 @@ app.delete('/api/tricks/:id', async (req, res) => {
 const DATA_DIR = path.join(BASE, 'data');
 const LOCAL_CLIPS_FILE = path.join(DATA_DIR, 'local-clips.json');
 const LOCAL_NOTES_LEGACY = path.join(DATA_DIR, 'local-notes.json');
+const APP_SETTINGS_FILE = path.join(DATA_DIR, 'app-settings.json');
 const LOCAL_THUMB_DIR = path.join(UPLOADS, 'local-thumbs');
 for (const d of [DATA_DIR, LOCAL_THUMB_DIR]) { if (!fs.existsSync(d)) fs.mkdirSync(d, { recursive: true }); }
 
 function readLocalClips() { try { return JSON.parse(fs.readFileSync(LOCAL_CLIPS_FILE, 'utf-8')); } catch { return []; } }
 function writeLocalClips(d) { fs.writeFileSync(LOCAL_CLIPS_FILE, JSON.stringify(d, null, 2)); }
+
+function readAppSettings() {
+  try { return { noFolderLitter: false, ...JSON.parse(fs.readFileSync(APP_SETTINGS_FILE, 'utf-8')) }; }
+  catch { return { noFolderLitter: false }; }
+}
+function writeAppSettings(d) {
+  fs.writeFileSync(APP_SETTINGS_FILE, JSON.stringify(d, null, 2));
+}
+function isNoFolderLitter() {
+  return !!readAppSettings().noFolderLitter;
+}
+
+function readLocalNotesStore() {
+  try { return JSON.parse(fs.readFileSync(LOCAL_NOTES_LEGACY, 'utf-8')); }
+  catch { return {}; }
+}
+function writeLocalNotesStore(d) {
+  fs.writeFileSync(LOCAL_NOTES_LEGACY, JSON.stringify(d, null, 2));
+}
+function noteTextFromStoreEntry(entry) {
+  if (!entry) return '';
+  return typeof entry === 'string' ? entry : (entry.text || '');
+}
 
 /** Sidecar next to media: "foo.mp4" → "foo.mp4.notes.txt" (moves with the library). */
 function noteSidecarPath(filePath) {
@@ -388,7 +412,10 @@ function noteSidecarPath(filePath) {
 function mediaHasNote(filePath) {
   try {
     const p = noteSidecarPath(filePath);
-    return fs.existsSync(p) && fs.statSync(p).size > 0;
+    if (fs.existsSync(p) && fs.statSync(p).size > 0) return true;
+  } catch {}
+  try {
+    return !!noteTextFromStoreEntry(readLocalNotesStore()[filePath]).trim();
   } catch { return false; }
 }
 function readNoteText(filePath) {
@@ -396,24 +423,37 @@ function readNoteText(filePath) {
   try {
     if (fs.existsSync(side)) return fs.readFileSync(side, 'utf-8');
   } catch {}
-  // One-shot fallback from old data/local-notes.json
+  // Fallback from data/local-notes.json (used when "禁止导出拉屎" is on)
   try {
-    if (!fs.existsSync(LOCAL_NOTES_LEGACY)) return '';
-    const raw = JSON.parse(fs.readFileSync(LOCAL_NOTES_LEGACY, 'utf-8'));
-    const entry = raw && raw[filePath];
-    if (!entry) return '';
-    const text = typeof entry === 'string' ? entry : (entry.text || '');
-    if (text && pathIsAllowed(filePath)) {
+    const text = noteTextFromStoreEntry(readLocalNotesStore()[filePath]);
+    if (!text) return '';
+    // Only migrate into sidecar when litter is allowed
+    if (pathIsAllowed(filePath) && !isNoFolderLitter()) {
       try { fs.writeFileSync(side, text, 'utf-8'); } catch {}
     }
-    return text || '';
+    return text;
   } catch { return ''; }
 }
 function writeNoteText(filePath, text) {
-  const side = noteSidecarPath(filePath);
   const trimmed = String(text || '');
+  const side = noteSidecarPath(filePath);
+  if (isNoFolderLitter()) {
+    try { if (fs.existsSync(side)) fs.unlinkSync(side); } catch {}
+    const store = readLocalNotesStore();
+    if (!trimmed.trim()) delete store[filePath];
+    else store[filePath] = { text: trimmed, updatedAt: new Date().toISOString() };
+    writeLocalNotesStore(store);
+    return null;
+  }
   if (!trimmed.trim()) {
     try { if (fs.existsSync(side)) fs.unlinkSync(side); } catch {}
+    try {
+      const store = readLocalNotesStore();
+      if (store[filePath] != null) {
+        delete store[filePath];
+        writeLocalNotesStore(store);
+      }
+    } catch {}
     return null;
   }
   fs.writeFileSync(side, trimmed, 'utf-8');
@@ -431,11 +471,28 @@ function remapLocalNotesPath(oldPath, newPath) {
   } catch (e) {
     console.warn('[notes] remap failed:', e.message);
   }
+  try {
+    const store = readLocalNotesStore();
+    if (store[oldPath] != null) {
+      store[newPath] = store[oldPath];
+      delete store[oldPath];
+      writeLocalNotesStore(store);
+    }
+  } catch (e) {
+    console.warn('[notes] store remap failed:', e.message);
+  }
 }
 function deleteLocalNote(filePath) {
   try {
     const side = noteSidecarPath(filePath);
     if (fs.existsSync(side)) fs.unlinkSync(side);
+  } catch {}
+  try {
+    const store = readLocalNotesStore();
+    if (store[filePath] != null) {
+      delete store[filePath];
+      writeLocalNotesStore(store);
+    }
   } catch {}
 }
 
@@ -1210,11 +1267,22 @@ app.get('/api/local/notes', (req, res) => {
   if (!pathIsAllowed(filePath)) return res.status(403).json({ error: '该路径不在白名单中' });
   const text = readNoteText(filePath);
   let updatedAt = null;
+  const noLitter = isNoFolderLitter();
   try {
     const side = noteSidecarPath(filePath);
     if (fs.existsSync(side)) updatedAt = fs.statSync(side).mtime.toISOString();
   } catch {}
-  res.json({ path: filePath, text, updatedAt, sidecar: noteSidecarPath(filePath) });
+  if (!updatedAt) {
+    try {
+      const entry = readLocalNotesStore()[filePath];
+      if (entry && typeof entry === 'object' && entry.updatedAt) updatedAt = entry.updatedAt;
+    } catch {}
+  }
+  res.json({
+    path: filePath, text, updatedAt,
+    sidecar: noLitter ? null : noteSidecarPath(filePath),
+    storage: noLitter ? 'data' : 'sidecar'
+  });
 });
 
 app.put('/api/local/notes', (req, res) => {
@@ -1225,11 +1293,23 @@ app.put('/api/local/notes', (req, res) => {
   try {
     writeNoteText(filePath, text);
     const trimmed = text.trim();
+    const noLitter = isNoFolderLitter();
     let updatedAt = null;
     if (trimmed) {
-      try { updatedAt = fs.statSync(noteSidecarPath(filePath)).mtime.toISOString(); } catch {}
+      if (noLitter) {
+        try {
+          const entry = readLocalNotesStore()[filePath];
+          updatedAt = (entry && entry.updatedAt) || new Date().toISOString();
+        } catch { updatedAt = new Date().toISOString(); }
+      } else {
+        try { updatedAt = fs.statSync(noteSidecarPath(filePath)).mtime.toISOString(); } catch {}
+      }
     }
-    res.json({ success: true, path: filePath, text: trimmed ? text : '', updatedAt, sidecar: noteSidecarPath(filePath) });
+    res.json({
+      success: true, path: filePath, text: trimmed ? text : '', updatedAt,
+      sidecar: noLitter ? null : noteSidecarPath(filePath),
+      storage: noLitter ? 'data' : 'sidecar'
+    });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -1273,10 +1353,30 @@ app.get('/api/local/clips/:id/export', async (req, res) => {
   }
 });
 
+// ── App settings (e.g. noFolderLitter) ──
+app.get('/api/app-settings', (req, res) => {
+  res.json(readAppSettings());
+});
+app.put('/api/app-settings', (req, res) => {
+  try {
+    const cur = readAppSettings();
+    if (typeof req.body?.noFolderLitter === 'boolean') cur.noFolderLitter = req.body.noFolderLitter;
+    writeAppSettings(cur);
+    res.json(cur);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ── Folder thumbnail ──
 const thumbUpload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 app.post('/api/local/folder-thumb', thumbUpload.single('thumb'), (req, res) => {
   try {
+    if (isNoFolderLitter()) {
+      return res.status(403).json({
+        error: '已开启「禁止导出拉屎」：不会在文件夹内生成 .TThumb.PNG 封面文件'
+      });
+    }
     const folderPath = req.body.folderPath;
     if (!folderPath || !req.file) return res.status(400).json({ error: '缺少参数' });
     const thumbPath = path.join(folderPath, '.TThumb.PNG');
@@ -1691,6 +1791,75 @@ app.get('/api/local/probe', (req, res) => {
       key, name: p.name,
       estimatedSize: p.vbitrate > 0 ? Math.round((p.vbitrate + p.abitrate) * 1000 / 8 * duration) : size
     }))});
+  });
+});
+
+// ── Full media metadata for detail "i" panel ──
+app.get('/api/local/media-info', (req, res) => {
+  const filePath = req.query.path || req.query.filePath;
+  if (!filePath) return res.status(400).json({ error: '缺少路径' });
+  if (!pathIsAllowed(filePath)) return res.status(403).json({ error: '该路径不在白名单中' });
+  if (!fs.existsSync(filePath)) return res.status(404).json({ error: '文件不存在' });
+
+  let st = null;
+  try { st = fs.statSync(filePath); } catch {}
+
+  execFile('ffprobe', [
+    '-v', 'quiet',
+    '-print_format', 'json',
+    '-show_format',
+    '-show_streams',
+    filePath
+  ], { maxBuffer: 12 * 1024 * 1024 }, (err, stdout) => {
+    let probe = null;
+    if (!err && stdout) {
+      try { probe = JSON.parse(stdout); } catch {}
+    }
+    const format = probe?.format || {};
+    const streams = Array.isArray(probe?.streams) ? probe.streams : [];
+    const videoStreams = streams.filter(s => s.codec_type === 'video').map(s => ({
+      index: s.index,
+      codec: s.codec_name || s.codec_long_name || '',
+      profile: s.profile || '',
+      width: s.width || 0,
+      height: s.height || 0,
+      pixFmt: s.pix_fmt || '',
+      fps: (s.avg_frame_rate && s.avg_frame_rate !== '0/0') ? s.avg_frame_rate
+        : ((s.r_frame_rate && s.r_frame_rate !== '0/0') ? s.r_frame_rate : ''),
+      bitrate: parseInt(s.bit_rate, 10) || 0,
+      duration: parseFloat(s.duration) || 0
+    }));
+    const audioStreams = streams.filter(s => s.codec_type === 'audio').map(s => ({
+      index: s.index,
+      codec: s.codec_name || s.codec_long_name || '',
+      sampleRate: parseInt(s.sample_rate, 10) || 0,
+      channels: s.channels || 0,
+      channelLayout: s.channel_layout || '',
+      bitrate: parseInt(s.bit_rate, 10) || 0,
+      language: (s.tags && (s.tags.language || s.tags.LANGUAGE)) || ''
+    }));
+    const subtitleStreams = streams.filter(s => s.codec_type === 'subtitle').map(s => ({
+      index: s.index,
+      codec: s.codec_name || '',
+      language: (s.tags && (s.tags.language || s.tags.LANGUAGE)) || '',
+      title: (s.tags && (s.tags.title || s.tags.TITLE)) || ''
+    }));
+
+    res.json({
+      path: filePath,
+      name: path.basename(filePath),
+      size: st ? st.size : (parseInt(format.size, 10) || 0),
+      birthtime: st ? st.birthtime.toISOString() : null,
+      mtime: st ? st.mtime.toISOString() : null,
+      duration: parseFloat(format.duration) || (videoStreams[0] && videoStreams[0].duration) || 0,
+      bitrate: parseInt(format.bit_rate, 10) || 0,
+      formatName: format.format_name || '',
+      formatLongName: format.format_long_name || '',
+      probeOk: !!probe,
+      video: videoStreams,
+      audio: audioStreams,
+      subtitle: subtitleStreams
+    });
   });
 });
 
